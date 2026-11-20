@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from PIL import Image
+from PIL import Image, ImageDraw
 from sklearn.calibration import calibration_curve
 from sklearn.metrics import precision_recall_curve, roc_curve
 
@@ -69,6 +69,8 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
     labels = np.asarray([p["label"] for p in predictions]); scores = np.asarray([p["score"] for p in predictions])
     groups = [p["group"] for p in predictions]; threshold = float(config["threshold"])
     result = cluster_bootstrap(labels, scores, groups, threshold, samples=bootstrap)
+    result["provenance"] = {"manifest_sha256": digest, "checkpoint_sha256": hashlib.sha256(checkpoint.read_bytes()).hexdigest(),
+                            "known_groups": len(set(groups)), "groups_with_negative_frames": len({groups[i] for i in range(len(groups)) if labels[i] == 0})}
     result["fixed_threshold_sensitivity"] = [metrics(labels, scores, t) for t in (0.1, 0.25, 0.5, 0.75, 0.9)]
     group_array = np.asarray(groups)
     negative_groups = sorted({groups[i] for i in range(len(groups)) if labels[i] == 0})
@@ -87,12 +89,28 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
         "false_positives": 1000 * (1 - release_prevalence) * (1 - point["specificity"]),
         "false_negatives": 1000 * release_prevalence * (1 - point["recall"]),
         "note": "Applies held-out sensitivity and specificity to curated release-frame prevalence; not a clinical forecast."}
+    estimated_tp = release_prevalence * point["recall"]
+    estimated_fp = (1 - release_prevalence) * (1 - point["specificity"])
+    result["illustration_per_1000_at_release_frame_prevalence"]["precision"] = estimated_tp / (estimated_tp + estimated_fp) if estimated_tp + estimated_fp else None
     (output / "metrics.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     for name, predicate in (("false_positives", lambda p: p["label"] == 0 and p["score"] >= threshold),
                             ("false_negatives", lambda p: p["label"] == 1 and p["score"] < threshold)):
         with (output / f"{name}.csv").open("w", encoding="utf-8", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=["path", "label", "score", "group"]); writer.writeheader()
             writer.writerows(sorted((p for p in predictions if predicate(p)), key=lambda p: p["score"], reverse=True))
+    fp = sorted((p for p in predictions if p["label"] == 0 and p["score"] >= threshold), key=lambda p: p["score"], reverse=True)[:8]
+    fn = sorted((p for p in predictions if p["label"] == 1 and p["score"] < threshold), key=lambda p: p["score"])[:8]
+    examples = [("FP", p) for p in fp] + [("FN", p) for p in fn]
+    if examples:
+        width, height = 240, 160
+        sheet = Image.new("RGB", (width * 4, height * ((len(examples) + 3) // 4)), "white")
+        draw = ImageDraw.Draw(sheet)
+        for index, (kind, prediction) in enumerate(examples):
+            with Image.open(raw / prediction["path"]) as image:
+                thumbnail = image.convert("RGB"); thumbnail.thumbnail((width, height - 25))
+            x, y = (index % 4) * width, (index // 4) * height
+            sheet.paste(thumbnail, (x, y)); draw.text((x + 2, y + height - 21), f"{kind}  score={prediction['score']:.4f}", fill="black")
+        sheet.save(output / "error_examples.png")
     by_group = defaultdict(list)
     for prediction in predictions:
         by_group[prediction["group"]].append(prediction)

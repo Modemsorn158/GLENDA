@@ -8,6 +8,7 @@ from unittest.mock import patch
 from PIL import Image
 
 from glenda.evaluate_test import evaluate
+from glenda.summarize_test import summarize
 
 
 class TestEvaluationTests(unittest.TestCase):
@@ -28,16 +29,19 @@ class TestEvaluationTests(unittest.TestCase):
             checkpoint = root / "final.pt"; checkpoint.write_bytes(b"checkpoint")
             config = {"manifest_sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(), "threshold": 0.5}
             with patch("glenda.evaluate_test.load_final", return_value=(None, config)), \
-                 patch("glenda.evaluate_test.predict_image", side_effect=lambda model, image, device: image.getpixel((0, 0))[0] / 255):
+                 patch("glenda.evaluate_test.predict_image", side_effect=lambda model, image, device: 0.4 if image.getpixel((0, 0))[0] else 0.6):
                 evaluate(raw, manifest, checkpoint, root / "result", root / "ledger", bootstrap=10)
                 with self.assertRaises(FileExistsError):
                     evaluate(raw, manifest, checkpoint, root / "second", root / "ledger", bootstrap=10)
             self.assertTrue((root / "result/metrics.json").exists())
             self.assertTrue((root / "result/evaluation.png").exists())
             self.assertTrue((root / "result/group_errors.csv").exists())
+            self.assertTrue((root / "result/error_examples.png").exists())
             with (root / "result/predictions.csv").open(encoding="utf-8", newline="") as f:
                 self.assertEqual(len(list(csv.DictReader(f))), 4)
             self.assertFalse((root / "second").exists())
+            summarize(root / "result", root / "ledger", root / "report.md")
+            self.assertIn("Locked holdout evaluation", (root / "report.md").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

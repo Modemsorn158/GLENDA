@@ -1,5 +1,6 @@
 """Local research-only image demonstration for a selected final checkpoint."""
 import argparse
+import os
 from pathlib import Path
 
 import torch
@@ -20,6 +21,8 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("checkpoint", type=Path)
     a = p.parse_args()
+    os.environ["GRADIO_ANALYTICS_ENABLED"] = "False"
+    os.environ["GRADIO_TEMP_DIR"] = str(a.checkpoint.resolve().parent / "gradio_tmp")
     import gradio as gr
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model, config = load_final(a.checkpoint, device)
