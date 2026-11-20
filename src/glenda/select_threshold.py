@@ -22,6 +22,12 @@ def select(manifest: Path, trial: Path, output: Path) -> dict:
     if trial_index >= len(search["configurations"]):
         raise ValueError("Trial index is not in search configuration")
     selected_config = search["configurations"][trial_index]
+    candidate_file = trial.parent / "selected_candidate.json"
+    candidate = json.loads(candidate_file.read_text(encoding="utf-8"))
+    if candidate["trial_index"] != trial_index or candidate["configuration"] != selected_config:
+        raise ValueError("Threshold trial is not the frozen selected candidate")
+    if candidate["search_sha256"] != hashlib.sha256((trial.parent / "search.json").read_bytes()).hexdigest() or candidate["fold_results_sha256"] != hashlib.sha256((trial.parent / "fold_results.json").read_bytes()).hexdigest():
+        raise ValueError("Search results changed after candidate selection")
     with manifest.open(encoding="utf-8", newline="") as f:
         development = {r["path"]: r for r in csv.DictReader(f) if r["partition"] == "development"}
     predictions, prediction_hashes = {}, []
@@ -55,6 +61,7 @@ def select(manifest: Path, trial: Path, output: Path) -> dict:
     best = np.flatnonzero(np.isclose(f1, np.max(f1), rtol=0, atol=1e-12))[-1]
     result = {"threshold": float(thresholds[best]), "oof_f1": float(f1[best]), "n": len(labels),
               "trial_index": trial_index, "trial_configuration": selected_config,
+              "candidate_selection_sha256": hashlib.sha256(candidate_file.read_bytes()).hexdigest(),
               "fold_prediction_sha256": prediction_hashes,
               "rule": "Maximize pooled development out-of-fold F1; ties choose highest threshold",
               "manifest_sha256": manifest_hash,

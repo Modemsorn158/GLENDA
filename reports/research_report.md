@@ -4,7 +4,7 @@
 
 ## Abstract
 
-We are rebuilding an image-level binary classification study using GLENDA v1.5. An audit found 373 annotated positive and 13,438 negative frames. Known cases, videos, exact duplicate frames and conservative near-duplicate candidates are linked before grouped splitting. A one-epoch frozen-backbone feasibility run and matched class-weighting ablation completed across five development folds. Longer tuning and other architecture comparisons remain incomplete. Unknown case links in part of the negative set limit claims about patient independence. No test evaluation or external validation has been performed.
+We are rebuilding an image-level binary classification study using GLENDA v1.5. An audit found 373 annotated positive and 13,438 negative frames. Known cases, videos, exact duplicate frames and conservative near-duplicate candidates are linked before grouped splitting. One-epoch frozen-backbone, class-weighting and ResNet50 feasibility runs completed across five development folds. Longer tuning remains incomplete. Unknown case links in part of the negative set limit claims about patient independence. No test evaluation or external validation has been performed.
 
 ## Introduction
 
@@ -32,7 +32,7 @@ The current environment has an NVIDIA RTX 4050 laptop GPU with 6 GB memory and P
 
 ## Results
 
-The [generated feasibility table](feasibility_results.md) reports each unweighted development-fold result and descriptive variation directly from recorded outputs. The [matched weighting table](weighting_feasibility.md) reports a one-epoch class-weighting ablation on the same folds, including the negative result on fold 0. These results do not establish convergence, statistical significance or held-out performance. No final fit, threshold selection, held-out evaluation or external validation has been completed.
+The [generated feasibility table](feasibility_results.md) reports each unweighted development-fold result and descriptive variation directly from recorded outputs. The [matched weighting table](weighting_feasibility.md) reports a one-epoch class-weighting ablation on the same folds, including the negative result on fold 0. A matched [ResNet50 comparison](architecture_feasibility.md) also has fold results in both directions. These results do not establish convergence, statistical significance, architectural superiority or held-out performance. No final fit, threshold selection, held-out evaluation or external validation has been completed.
 
 ## Discussion
 

@@ -29,6 +29,8 @@ def fit(raw: Path, manifest: Path, trial: Path, threshold_file: Path, output: Pa
     selection = json.loads(threshold_file.read_text(encoding="utf-8"))
     if selection["manifest_sha256"] != manifest_hash or trial.name != f"trial_{selection['trial_index']:03d}":
         raise ValueError("Threshold selection does not match manifest and trial")
+    if selection["candidate_selection_sha256"] != hashlib.sha256((trial.parent / "selected_candidate.json").read_bytes()).hexdigest():
+        raise ValueError("Candidate selection changed after threshold selection")
     search = json.loads((trial.parent / "search.json").read_text(encoding="utf-8"))
     if search["manifest_sha256"] != manifest_hash or search["configurations"][selection["trial_index"]] != selection["trial_configuration"]:
         raise ValueError("Selected trial does not match the original search")

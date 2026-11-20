@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 from glenda.select_threshold import select
+from glenda.select_candidate import select as select_candidate
 
 
 class ThresholdTests(unittest.TestCase):
@@ -22,6 +23,8 @@ class ThresholdTests(unittest.TestCase):
                         writer.writerow(dict(path=path, label=label, group=path, partition="development", cv_fold=fold))
             manifest_hash = hashlib.sha256(manifest.read_bytes()).hexdigest()
             (root / "search.json").write_text(json.dumps({"manifest_sha256": manifest_hash, "configurations": [{}]}))
+            (root / "fold_results.json").write_text(json.dumps([{"trial": 0, "fold": fold, "status": "complete", "best_validation_average_precision": 0.5} for fold in range(5)]))
+            select_candidate(root)
             for fold in range(5):
                 (trial / f"fold_{fold}_status.json").write_text('{"status": "complete"}')
                 folder = trial / f"fold_{fold}"; folder.mkdir()

@@ -13,6 +13,7 @@ from PIL import Image
 
 from glenda.fit_final import fit
 from glenda.select_threshold import select
+from glenda.select_candidate import select as select_candidate
 
 
 class FinalFitTests(unittest.TestCase):
@@ -37,6 +38,8 @@ class FinalFitTests(unittest.TestCase):
                       "weight_decay": 0.0, "batch_size": 2, "seed": 42, "weighted": False,
                       "random_init": False, "cpu": True}
             (search / "search.json").write_text(json.dumps({"manifest_sha256": digest, "configurations": [chosen]}))
+            (search / "fold_results.json").write_text(json.dumps([{"trial": 0, "fold": fold, "status": "complete", "best_validation_average_precision": 0.9} for fold in range(5)]))
+            select_candidate(search)
             for fold in range(5):
                 (trial / f"fold_{fold}_status.json").write_text('{"status":"complete"}')
                 folder = trial / f"fold_{fold}"; folder.mkdir()
