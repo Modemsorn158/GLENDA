@@ -1,6 +1,6 @@
 # GLENDA research rebuild — early foundation
 
-This is an **incomplete research rebuild**. It does not yet train or evaluate a model, establish a locked test set, or support clinical use. The original data are kept separately in `../read_only/raw` and are never modified by the audit.
+This is an **incomplete research rebuild**. Development-fold feasibility experiments are complete and tuning is in progress; the fixed holdout has not been evaluated. The project is for research only and does not support clinical use. The original data are kept separately in `../read_only/raw` and are never modified by the audit. See the [interim report](reports/research_report.md), [methodology](docs/methodology.md) and [literature notes](docs/literature.md).
 
 ## Dataset inventory
 

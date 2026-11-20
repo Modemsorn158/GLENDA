@@ -12,7 +12,7 @@ The research question is how well transfer learning with EfficientNet-B0 identif
 
 ## Related work
 
-Leibetseder and colleagues introduced GLENDA [1]; the v1.5 release distinguishes annotated keyframes from negative video sequences [2]. Zaidi and colleagues [3] evaluated image classification architectures on GLENDA. Leibetseder and colleagues [4] investigated region-based lesion detection and localization; those tasks and their metrics differ from frame classification. Scores from these studies are not directly comparable without aligned data and evaluation protocols.
+Leibetseder and colleagues introduced GLENDA [1]; the v1.5 release distinguishes annotated keyframes from negative video sequences [2]. Zaidi and colleagues [3] evaluated image classification architectures on GLENDA. Leibetseder and colleagues [4] investigated region-based lesion detection and localization; those tasks and their metrics differ from frame classification. Zhu and Elbattah [5] studied image classifiers and compared visual explanations with lesion masks. Explanation-map overlap is a distinct question from classification accuracy and does not establish clinical validity. Scores from these studies are not directly comparable without aligned data, grouping and evaluation protocols.
 
 ## Dataset and audit
 
@@ -26,7 +26,7 @@ The negative label describes the released counterexample sequences; it is not a 
 
 Groups are transitive components formed from known case and video IDs, exact hashes and candidate links. A fixed seed creates a grouped outer holdout. Initial v1 development folds were used for feasibility studies; after observing that one contained only one negative-bearing group, development groups were reassigned in v2 to give two or three negative-bearing groups per fold. The original holdout was preserved exactly. The first v1 tuning attempt was interrupted after three folds and retained without model selection. Reassignment occurred after exploratory development results and is disclosed here; v1 and v2 folds are not paired. Neither validation nor test frames are undersampled. Known identities do not establish patient independence for the unmapped negative videos. The manifests, source hashes, seeds and distributions are in `outputs/splits/v1/` and `outputs/splits/v2/`.
 
-The model uses a single-logit ImageNet-pretrained EfficientNet-B0 with 224-by-224 resizing, ImageNet normalization and a training-only horizontal flip. Frozen and partial fine-tuning, unweighted versus class-weighted loss, and a frozen ResNet50 baseline are specified as a planned comparison. Average precision drives validation selection. Threshold selection is defined using development out-of-fold predictions; final fitting uses the median best-epoch count from the selected folds. Both procedures must be completed before any test evaluation.
+The model uses a single-logit ImageNet-pretrained EfficientNet-B0 with 224-by-224 resizing, ImageNet normalization and a training-only horizontal flip. One-epoch feasibility comparisons examined frozen versus partial fine-tuning, unweighted versus class-weighted loss, and a frozen ResNet50 baseline. A separate short tuning search is in progress on the revised development folds. Average precision drives validation selection. Threshold selection is defined using development out-of-fold predictions; final fitting uses the median best-epoch count from the selected folds. Both procedures must be completed before any test evaluation.
 
 ## Experimental setup
 
@@ -54,3 +54,4 @@ The audit and grouped experimental foundation are complete enough to support pre
 2. ITEC. GLENDA v1.5 dataset documentation and terms. https://ftp.itec.aau.at/datasets/GLENDA/
 3. Zaidi SA, Chouvatut V, Phongnarisorn C, Praserttitipong D. Deep learning based detection of endometriosis lesions in laparoscopic images with 5-fold cross-validation. *Intelligence-Based Medicine*. 2025;11:100230. https://doi.org/10.1016/j.ibmed.2025.100230
 4. Leibetseder A, Schoeffmann K, Keckstein J, Keckstein S. Endometriosis detection and localization in laparoscopic gynecology. *Multimedia Tools and Applications*. 2022;81:6191–6215. https://doi.org/10.1007/s11042-021-11730-1
+5. Zhu Y, Elbattah M. Explainable Deep Learning for Endometriosis Classification in Laparoscopic Images. *BioMedInformatics*. 2025;5(4):63. https://doi.org/10.3390/biomedinformatics5040063
