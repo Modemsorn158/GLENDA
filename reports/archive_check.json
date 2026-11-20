@@ -1,0 +1,13 @@
+{
+  "inventory_sha256": "5bf43601df1264cd34548dc0ab65c3a3a98f58be47a864702c31a41286641ca4",
+  "archive_sha256": {
+    "Glenda_v1.5_classes.zip": "4561d11ba3732f50efe8e5ce69c9d5863ee66e7dc73a0011ca7b69e9d6fac4c4",
+    "GLENDA_v1.5_no_pathology.zip": "99e448fa5b4e662da65fd69af2d8066c8196e5e3f838946c237829f36c4dfc1d"
+  },
+  "archive_frames": 13811,
+  "inventory_frames": 13811,
+  "missing_archive_frames": [],
+  "unexpected_or_mismatched_frames": [],
+  "duplicate_archive_entry_names": [],
+  "coco_byte_match": true
+}

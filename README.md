@@ -9,12 +9,13 @@ Install Python and Pillow, then run from this directory (PowerShell):
 ```powershell
 $env:PYTHONPATH='src'
 python -m glenda.inventory ..\read_only\raw outputs\audit
+python -m glenda.archive_check outputs\audit\inventory.csv ..\read_only\zip\Glenda_v1.5_classes.zip ..\read_only\zip\GLENDA_v1.5_no_pathology.zip ..\read_only\raw outputs\audit\archive_check.json
 python -m unittest discover -s tests -v
 ```
 
 The tested GPU environment uses Windows x64, Python 3.14.7 and CUDA-enabled PyTorch 2.15.0+cu132. Its installed package versions are recorded in `requirements-gpu.lock`; install them in a fresh virtual environment with `python -m pip install -r requirements-gpu.lock --extra-index-url https://download.pytorch.org/whl/cu132`. CUDA availability depends on the local NVIDIA driver. The lock records versions, not package hashes or a guarantee of bitwise reproducibility; other platforms may require different builds. A CPU environment is sufficient for smoke tests.
 
-The inventory checks positive images against the supplied COCO file, decodes every frame, records SHA-256 hashes, and reports exact duplicates and unreadable files. Derived files go in `outputs/`, which is ignored by Git. To screen cross-component near duplicates and create a development/test manifest, install the project dependencies (`python -m pip install -e .`), then run:
+The inventory checks positive images against the supplied COCO file, decodes every frame, records SHA-256 hashes, and reports exact duplicates and unreadable files. The archive check compares those frame hashes and the COCO JSON with the supplied ZIPs; the local check matched all 13,811 frames and the COCO JSON. It does not verify every ancillary archive file. Derived files go in `outputs/`, which is ignored by Git. To screen cross-component near duplicates and create a development/test manifest, install the project dependencies (`python -m pip install -e .`), then run:
 
 ```powershell
 python -m glenda.near_duplicates ..\read_only\raw outputs\audit\inventory.csv outputs\audit\near_duplicates.csv
@@ -45,6 +46,6 @@ Only after the model, fixed epoch count and threshold are selected and final fit
 
 After successful completion, `python -m glenda.summarize_test outputs\test\selected outputs\test\ledger reports\test_results.md` generates a de-identified result table from the recorded metrics and verifies the ledger. The full prediction and image files stay in the ignored `outputs/` directory.
 
-For a research-only demonstration after a selected final model has been evaluated, install `python -m pip install -e '.[training,demo]'` and run `python -m glenda.demo outputs\final\selected\final.pt`. It listens on localhost, displays the fixed threshold and an uncalibrated score, and is not for diagnosis. The prediction function has a unit test, but the Gradio interface has not yet been exercised with a final model.
+For a research-only demonstration after a selected final model has been evaluated, install `python -m pip install -e '.[training,demo]'` and run `python -m glenda.demo outputs\final\selected\final.pt`. It listens on localhost, displays the fixed threshold and an uncalibrated score, and is not for diagnosis. The Gradio interface has been checked end-to-end with a synthetic image and a randomly initialized synthetic checkpoint; it has not yet been exercised with a selected final model.
 
 The project does not yet implement epoch-level checkpoint resumption. GPU kernels are not guaranteed deterministic. Do not present smoke tests as research results. The held-out evaluation has not been run.
