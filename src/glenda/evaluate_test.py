@@ -126,7 +126,7 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
     observed, predicted = calibration_curve(labels, scores, n_bins=10, strategy="uniform")
     fig, axes = plt.subplots(2, 2, figsize=(11, 9)); axes = axes.flatten()
     axes[0].plot(fpr, tpr); axes[0].plot([0, 1], [0, 1], "--", color="gray"); axes[0].set(xlabel="False positive rate", ylabel="Sensitivity", title="ROC")
-    axes[1].plot(recall, precision); axes[1].axhline(float(labels.mean()), linestyle="--", color="gray"); axes[1].set(xlabel="Recall", ylabel="Precision", title="Precision-recall")
+    axes[1].step(recall[::-1], precision[::-1], where="pre"); axes[1].axhline(float(labels.mean()), linestyle="--", color="gray"); axes[1].set(xlabel="Recall", ylabel="Precision", title="Precision-recall")
     axes[2].plot(predicted, observed, marker="o"); axes[2].plot([0, 1], [0, 1], "--", color="gray"); axes[2].set(xlabel="Mean score", ylabel="Observed fraction", title="Calibration")
     grid = np.linspace(0, 1, 101)
     grid_precision, grid_recall = [], []
