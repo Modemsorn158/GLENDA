@@ -111,6 +111,9 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
     fn = sorted((p for p in predictions if p["label"] == 1 and p["score"] < threshold), key=lambda p: p["score"])[:8]
     examples = [("FP", p) for p in fp] + [("FN", p) for p in fn]
     if examples:
+        with (output / "error_examples.csv").open("w", encoding="utf-8", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=["slot", "error", "path", "label", "score", "group"]); writer.writeheader()
+            writer.writerows({"slot": index + 1, "error": kind, **prediction} for index, (kind, prediction) in enumerate(examples))
         width, height = 240, 160
         sheet = Image.new("RGB", (width * 4, height * ((len(examples) + 3) // 4)), "white")
         draw = ImageDraw.Draw(sheet)
@@ -118,7 +121,7 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
             with Image.open(raw / prediction["path"]) as image:
                 thumbnail = image.convert("RGB"); thumbnail.thumbnail((width, height - 25))
             x, y = (index % 4) * width, (index // 4) * height
-            sheet.paste(thumbnail, (x, y)); draw.text((x + 2, y + height - 21), f"{kind}  score={prediction['score']:.4f}", fill="black")
+            sheet.paste(thumbnail, (x, y)); draw.text((x + 2, y + height - 21), f"{index + 1}. {kind}  score={prediction['score']:.4f}", fill="black")
         sheet.save(output / "error_examples.png")
     by_group = defaultdict(list)
     for prediction in predictions:

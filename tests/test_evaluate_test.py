@@ -44,6 +44,7 @@ class TestEvaluationTests(unittest.TestCase):
             self.assertTrue((root / "result/evaluation.png").exists())
             self.assertTrue((root / "result/group_errors.csv").exists())
             self.assertTrue((root / "result/error_examples.png").exists())
+            self.assertTrue((root / "result/error_examples.csv").exists())
             with (root / "result/predictions.csv").open(encoding="utf-8", newline="") as f:
                 self.assertEqual(len(list(csv.DictReader(f))), 4)
             self.assertFalse((root / "second").exists())
