@@ -70,6 +70,12 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
     groups = [p["group"] for p in predictions]; threshold = float(config["threshold"])
     result = cluster_bootstrap(labels, scores, groups, threshold, samples=bootstrap)
     result["fixed_threshold_sensitivity"] = [metrics(labels, scores, t) for t in (0.1, 0.25, 0.5, 0.75, 0.9)]
+    group_array = np.asarray(groups)
+    negative_groups = sorted({groups[i] for i in range(len(groups)) if labels[i] == 0})
+    result["leave_one_negative_group_out"] = [
+        {"excluded_group": group, "metrics": metrics(labels[group_array != group], scores[group_array != group], threshold)}
+        for group in negative_groups if np.any(group_array != group)]
+    result["leave_one_negative_group_out_note"] = "Descriptive source sensitivity at the fixed threshold; not an independent test or a basis for retuning."
     result["warning"] = "Dataset frame prevalence is curated and is not population prevalence; unknown patient links can affect uncertainty."
     point = result["point"]
     result["illustration_per_1000_at_test_frame_prevalence"] = {

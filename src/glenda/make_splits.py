@@ -59,7 +59,12 @@ def make(inventory: Path, candidates: Path, output: Path, seed: int = 42) -> Non
                "inventory_sha256": hashlib.sha256(inventory.read_bytes()).hexdigest(),
                "candidate_pairs_sha256": hashlib.sha256(candidates.read_bytes()).hexdigest(),
                "counts": {name: dict(Counter(str(labels[i]) for i in range(len(rows)) if assignments[i] == name)) for name in ("development", "test")},
+               "group_counts": {name: {"all": len({groups[i] for i in range(len(rows)) if assignments[i] == name}),
+                                        "with_positive": len({groups[i] for i in range(len(rows)) if assignments[i] == name and labels[i] == 1}),
+                                        "with_negative": len({groups[i] for i in range(len(rows)) if assignments[i] == name and labels[i] == 0})}
+                                for name in ("development", "test")},
                "validation_counts": {str(f): dict(Counter(str(labels[i]) for i in dev if folds[i] == f)) for f in range(5)},
+               "validation_group_counts": {str(f): len({groups[i] for i in dev if folds[i] == f}) for f in range(5)},
                "warning": "Unmapped negative patient identities and near-duplicate false negatives prevent a guarantee of patient-level independence."}
     (output / "protocol.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print(json.dumps(summary, indent=2))

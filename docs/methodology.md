@@ -8,6 +8,8 @@ After the one-epoch feasibility ablation, the short tuning budget in `configs/tu
 
 Link all frames with the same known case, video, exact SHA-256 digest, or difference-hash screening candidate before splitting. The dHash threshold of three is a reproducible, conservative screening rule, not a diagnosis of duplication; a visual review found some candidate pairs are plainly different. It does not detect all transformed or near-identical images. It can merge independent groups, and unknown patient relationships remain a leakage threat. Seek the dataset owners' case mapping and use stronger duplicate review before claiming patient independence.
 
+The fixed holdout has 22 known linked groups: 21 contain positive frames and three contain negative frames, with overlap between those categories. Its 2,688 negative frames are concentrated in three groups of 2,269, 321 and 98 frames; the largest contributes 84.4% of the negatives. This is a serious constraint on specificity and uncertainty. Do not replace the holdout after examining development results. A genuinely new external cohort with more independent negative cases is needed for stronger generalization claims.
+
 The split manifest and input inventory are fingerprinted, but the trainer does not rehash raw image bytes at every run. Before reproducing an experiment, rerun the read-only inventory into a separate output directory and compare its `inventory.csv` SHA-256 with the value in the saved split protocol. The sequence-bound audit was repeated and reproduced the original inventory hash in this environment.
 
 ## Historical report

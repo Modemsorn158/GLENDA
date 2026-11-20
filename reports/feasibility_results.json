@@ -51,7 +51,26 @@
     },
     "warning": "Unmapped negative patient identities and near-duplicate false negatives prevent a guarantee of patient-level independence.",
     "numpy_version": "2.5.5",
-    "scikit_learn_version": "1.9.1"
+    "scikit_learn_version": "1.9.1",
+    "group_counts": {
+      "development": {
+        "all": 90,
+        "with_positive": 80,
+        "with_negative": 14
+      },
+      "test": {
+        "all": 22,
+        "with_positive": 21,
+        "with_negative": 3
+      }
+    },
+    "validation_group_counts": {
+      "0": 18,
+      "1": 19,
+      "2": 17,
+      "3": 16,
+      "4": 20
+    }
   },
   "folds": [
     {

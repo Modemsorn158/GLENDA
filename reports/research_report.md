@@ -20,6 +20,8 @@ The supplied v1.5 files contain 13,811 JPEG frames, including 373 COCO-annotated
 
 The negative label describes the released counterexample sequences; it is not a histological confirmation for every frame. The 2.7% positive fraction describes this curated release, not an estimate of clinical prevalence. Five negative videos contribute 8,605 of 13,438 negative frames (64.0%), whereas the five largest positive videos contribute 34 of 373 annotated frames (9.1%). The generated `outputs/audit/composition.png` shows this source imbalance, a potential source shortcut and a reason frame-level uncertainty can be misleading.
 
+![Class and source-video composition](../outputs/audit/composition.png)
+
 ## Methodology
 
 Groups are transitive components formed from known case and video IDs, exact hashes and candidate links. A fixed seed creates a grouped outer holdout and five grouped development folds. Neither validation nor test frames are undersampled. Known identities do not establish patient independence for the unmapped negative videos. The manifest, source hashes, seed and distributions are in `outputs/splits/v1/`.
@@ -40,7 +42,7 @@ The original report describes an undersampled 114-frame test set with a 1:2 clas
 
 ## Limitations
 
-Images are correlated within videos; patient identities for some negative videos are unavailable. Difference hashing is incomplete and can over-link unrelated views. Positive annotated keyframes and negative video sequences are curated differently, inviting source and acquisition shortcuts. The resize changes image aspect ratio. Evaluation on this previously used dataset is not external validation. GPU operations need not be exactly deterministic. Diagnostic utility, calibration in deployment, clinical prevalence and lesion localization remain unestablished.
+Images are correlated within videos; patient identities for some negative videos are unavailable. The fixed holdout has only three groups with negative frames, and one group contributes 2,269 of the 2,688 negatives (84.4%). Specificity can therefore be dominated by one source and group-bootstrap intervals may be unstable. Difference hashing is incomplete and can over-link unrelated views. Positive annotated keyframes and negative video sequences are curated differently, inviting source and acquisition shortcuts. The resize changes image aspect ratio. Evaluation on this previously used dataset is not external validation. GPU operations need not be exactly deterministic. Diagnostic utility, calibration in deployment, clinical prevalence and lesion localization remain unestablished.
 
 ## Conclusion
 
