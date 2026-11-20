@@ -36,7 +36,7 @@ def run(raw: Path, manifest: Path, config_path: Path, output: Path) -> None:
             raise ValueError("Existing search uses different configurations or manifest")
     else:
         identity_file.write_text(json.dumps(identity, indent=2), encoding="utf-8")
-    results = []
+    results, summaries = [], []
     for trial, config in enumerate(configurations):
         for fold in range(5):
             run_dir = output / f"trial_{trial:03d}" / f"fold_{fold}"
@@ -68,6 +68,10 @@ def run(raw: Path, manifest: Path, config_path: Path, output: Path) -> None:
             results.append({"trial": trial, "fold": fold, **status})
             (output / "fold_results.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
         completed = [r["best_validation_average_precision"] for r in results if r["trial"] == trial and r["status"] == "complete"]
+        summaries.append({"trial": trial, "configuration": config, "completed_folds": len(completed),
+                          "mean_average_precision": float(np.mean(completed)) if len(completed) == 5 else None,
+                          "std_average_precision": float(np.std(completed, ddof=1)) if len(completed) == 5 else None})
+        (output / "trial_summary.json").write_text(json.dumps(summaries, indent=2), encoding="utf-8")
         print(f"trial={trial} completed={len(completed)}/5" + (f" mean_ap={np.mean(completed):.6f}" if len(completed) == 5 else ""), flush=True)
 
 
