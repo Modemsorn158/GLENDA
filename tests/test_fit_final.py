@@ -39,17 +39,18 @@ class FinalFitTests(unittest.TestCase):
                       "random_init": False, "cpu": True}
             (search / "search.json").write_text(json.dumps({"manifest_sha256": digest, "configurations": [chosen]}))
             (search / "fold_results.json").write_text(json.dumps([{"trial": 0, "fold": fold, "status": "complete", "best_validation_average_precision": 0.9} for fold in range(5)]))
-            select_candidate(search)
             for fold in range(5):
-                (trial / f"fold_{fold}_status.json").write_text('{"status":"complete"}')
+                (trial / f"fold_{fold}_status.json").write_text('{"status":"complete", "best_validation_average_precision":0.9}')
                 folder = trial / f"fold_{fold}"; folder.mkdir()
                 (folder / "config.json").write_text(json.dumps({**chosen, "manifest_sha256": digest, "fold": fold, "pretrained_weights_sha256": weights_hash}))
                 (folder / "epochs.csv").write_text("epoch,validation_average_precision\n1,0.9\n", encoding="utf-8")
+                (folder / "best.pt").write_bytes(b"checkpoint")
                 with (folder / "validation_predictions.csv").open("w", encoding="utf-8", newline="") as f:
                     writer = csv.DictWriter(f, fieldnames=["path", "label", "score", "group"]); writer.writeheader()
                     for label in range(2):
                         name = f"{fold}-{label}.png"
                         writer.writerow(dict(path=name, label=label, score=0.2 + label * 0.6, group=name))
+            select_candidate(search)
             threshold = root / "threshold.json"
             select(manifest, trial, threshold)
             with patch("glenda.fit_final.pretrained_url", return_value="https://example.org/fake.pth"), \

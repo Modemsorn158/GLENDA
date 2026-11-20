@@ -1,5 +1,6 @@
 """Freeze the best complete primary-model trial using development AP."""
 import argparse
+import csv
 import hashlib
 import json
 from pathlib import Path
@@ -17,6 +18,12 @@ def select(search: Path) -> dict:
     configurations = identity["configurations"]
     if not configurations or any(c.get("architecture", "efficientnet_b0") != "efficientnet_b0" for c in configurations):
         raise ValueError("Candidate search must contain EfficientNet-B0 configurations")
+    if len(folds) != len(configurations) * 5 or any(
+        len([r for r in folds if r["trial"] == trial and r["status"] == "complete"]) != 5 or
+        {r["fold"] for r in folds if r["trial"] == trial} != set(range(5))
+        for trial in range(len(configurations))
+    ):
+        raise ValueError("All five folds of every candidate must complete")
     means = []
     for trial in range(len(configurations)):
         rows = [r for r in folds if r["trial"] == trial]
@@ -25,6 +32,19 @@ def select(search: Path) -> dict:
         values = [r["best_validation_average_precision"] for r in rows]
         if not np.isfinite(values).all() or any(not 0 <= value <= 1 for value in values):
             raise ValueError("Invalid fold average precision")
+        for row in rows:
+            fold = row["fold"]
+            folder = search / f"trial_{trial:03d}" / f"fold_{fold}"
+            status = json.loads((folder.parent / f"fold_{fold}_status.json").read_text(encoding="utf-8"))
+            config = json.loads((folder / "config.json").read_text(encoding="utf-8"))
+            if status["status"] != "complete" or status["best_validation_average_precision"] != row["best_validation_average_precision"]:
+                raise ValueError("Fold status does not match search results")
+            if config["fold"] != fold or config["manifest_sha256"] != identity["manifest_sha256"] or any(config.get(k) != v for k, v in configurations[trial].items()):
+                raise ValueError("Fold configuration does not match search")
+            with (folder / "epochs.csv").open(encoding="utf-8", newline="") as f:
+                scores = [float(item["validation_average_precision"]) for item in csv.DictReader(f)]
+            if not scores or max(scores) != row["best_validation_average_precision"] or not (folder / "best.pt").is_file() or not (folder / "validation_predictions.csv").is_file():
+                raise ValueError("Fold outputs do not match the recorded score")
         means.append(float(np.mean(values)))
     if len(folds) != len(configurations) * 5:
         raise ValueError("Unexpected fold results")

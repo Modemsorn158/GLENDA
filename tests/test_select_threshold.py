@@ -24,16 +24,18 @@ class ThresholdTests(unittest.TestCase):
             manifest_hash = hashlib.sha256(manifest.read_bytes()).hexdigest()
             (root / "search.json").write_text(json.dumps({"manifest_sha256": manifest_hash, "configurations": [{}]}))
             (root / "fold_results.json").write_text(json.dumps([{"trial": 0, "fold": fold, "status": "complete", "best_validation_average_precision": 0.5} for fold in range(5)]))
-            select_candidate(root)
             for fold in range(5):
-                (trial / f"fold_{fold}_status.json").write_text('{"status": "complete"}')
+                (trial / f"fold_{fold}_status.json").write_text('{"status": "complete", "best_validation_average_precision": 0.5}')
                 folder = trial / f"fold_{fold}"; folder.mkdir()
                 (folder / "config.json").write_text(json.dumps({"manifest_sha256": manifest_hash, "fold": fold}))
+                (folder / "epochs.csv").write_text("validation_average_precision\n0.5\n")
+                (folder / "best.pt").write_bytes(b"checkpoint")
                 with (folder / "validation_predictions.csv").open("w", encoding="utf-8", newline="") as f:
                     writer = csv.DictWriter(f, fieldnames=["path", "label", "score", "group"]); writer.writeheader()
                     for label in range(2):
                         path = f"{fold}-{label}"
                         writer.writerow(dict(path=path, label=label, score=0.2 if label == 0 else 0.8, group=path))
+            select_candidate(root)
             result = select(manifest, trial, root / "threshold.json")
             self.assertEqual(result["threshold"], 0.8)
             self.assertEqual(result["oof_f1"], 1.0)
