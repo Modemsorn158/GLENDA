@@ -6,11 +6,14 @@ import csv
 import hashlib
 import json
 import os
+import platform
 import random
 from pathlib import Path
 
 import numpy as np
 import torch
+import torchvision
+import sklearn
 from sklearn.metrics import precision_recall_curve
 from torch import nn
 from torch.utils.data import DataLoader
@@ -85,7 +88,10 @@ def fit(raw: Path, manifest: Path, trial: Path, threshold_file: Path, output: Pa
                 "manifest_sha256": manifest_hash, "threshold": selection["threshold"],
                 "threshold_file_sha256": hashlib.sha256(threshold_file.read_bytes()).hexdigest(),
                 "pretrained_weights_url": url, "pretrained_weights_sha256": weight_hash,
-                "device": str(device), "torch_version": str(torch.__version__), "cuda_version": torch.version.cuda}
+                "device": str(device), "device_name": torch.cuda.get_device_name(0) if device.type == "cuda" else platform.processor(),
+                "torch_version": str(torch.__version__), "torchvision_version": str(torchvision.__version__),
+                "sklearn_version": sklearn.__version__, "numpy_version": np.__version__, "python_version": platform.python_version(),
+                "cuda_version": torch.version.cuda, "cv_training_source_sha256": search.get("training_source_sha256")}
     (output / "config.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     generator = torch.Generator().manual_seed(base["seed"])
     loader = DataLoader(data, batch_size=base["batch_size"], shuffle=True, generator=generator, num_workers=0)
