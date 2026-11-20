@@ -40,7 +40,11 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
     # Validates uniqueness and known group separation without opening images.
     DevelopmentDataset(raw, manifest, 0, True)
     with manifest.open(encoding="utf-8", newline="") as f:
-        rows = [r for r in csv.DictReader(f) if r["partition"] == "test"]
+        all_rows = list(csv.DictReader(f))
+    if any(r["label"] not in {"0", "1"} for r in all_rows):
+        raise ValueError("Manifest labels must be binary")
+    release_prevalence = sum(int(r["label"]) for r in all_rows) / len(all_rows)
+    rows = [r for r in all_rows if r["partition"] == "test"]
     if not rows or {r["label"] for r in rows} != {"0", "1"}:
         raise ValueError("Held-out split must contain both labels")
     if len({r["group"] for r in rows}) < 2:
@@ -72,6 +76,11 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
         "false_positives": 1000 * (1 - point["prevalence"]) * (1 - point["specificity"]),
         "false_negatives": 1000 * point["prevalence"] * (1 - point["recall"]),
         "note": "Descriptive re-expression of this test set, not a clinical population estimate."}
+    result["illustration_per_1000_at_release_frame_prevalence"] = {
+        "prevalence": release_prevalence,
+        "false_positives": 1000 * (1 - release_prevalence) * (1 - point["specificity"]),
+        "false_negatives": 1000 * release_prevalence * (1 - point["recall"]),
+        "note": "Applies held-out sensitivity and specificity to curated release-frame prevalence; not a clinical forecast."}
     (output / "metrics.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     for name, predicate in (("false_positives", lambda p: p["label"] == 0 and p["score"] >= threshold),
                             ("false_negatives", lambda p: p["label"] == 1 and p["score"] < threshold)):
