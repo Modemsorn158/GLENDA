@@ -23,6 +23,13 @@ class GroupTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             assert_disjoint([{"path": "a"}], [])
 
+    def test_candidate_links_and_missing_path(self):
+        rows = [{"path": "a"}, {"path": "b"}]
+        with self.assertRaises(ValueError):
+            assert_disjoint(rows, ["train", "test"], [("a", "b")])
+        with self.assertRaises(ValueError):
+            connected_groups(rows, [("a", "missing")])
+
 
 if __name__ == "__main__":
     unittest.main()
