@@ -18,7 +18,7 @@ Leibetseder et al. [5] investigated region-based detection and segmentation with
 
 ## Relevance to this protocol
 
-The literature motivates transfer learning and careful source-level separation, but it does not resolve the missing patient mapping in the supplied negative sequences. This study therefore reports known-group separation, frame and group counts, class imbalance and uncertainty without asserting patient-independent or external validation. Its one-epoch feasibility results are exploratory and not a superiority comparison with published studies.
+The literature motivates transfer learning and careful source-level separation, but it does not resolve the missing patient mapping in the supplied negative sequences. Precision–recall analysis can reveal consequences of class imbalance that a ROC curve alone may obscure [6]; average precision remains dependent on the evaluated prevalence. Cluster bootstrap methods are designed for correlated observations [7], but their usefulness depends on appropriate, sufficiently numerous independent clusters. In this study the test set has only three known negative-bearing groups and unknown patient links, so bootstrap intervals must be interpreted cautiously. This study therefore reports known-group separation, frame and group counts, class imbalance and uncertainty without asserting patient-independent or external validation. Its one-epoch feasibility results are exploratory and not a superiority comparison with published studies.
 
 ## References
 
@@ -27,3 +27,5 @@ The literature motivates transfer learning and careful source-level separation, 
 3. Zaidi SA, Chouvatut V, Phongnarisorn C, Praserttitipong D. Deep learning based detection of endometriosis lesions in laparoscopic images with 5-fold cross-validation. *Intelligence-Based Medicine*. 2025;11:100230. https://doi.org/10.1016/j.ibmed.2025.100230
 4. Zhu Y, Elbattah M. Explainable Deep Learning for Endometriosis Classification in Laparoscopic Images. *BioMedInformatics*. 2025;5(4):63. https://doi.org/10.3390/biomedinformatics5040063
 5. Leibetseder A, Schoeffmann K, Keckstein J, Keckstein S. Endometriosis detection and localization in laparoscopic gynecology. *Multimedia Tools and Applications*. 2022;81:6191–6215. https://doi.org/10.1007/s11042-021-11730-1
+6. Saito T, Rehmsmeier M. The Precision-Recall Plot Is More Informative than the ROC Plot When Evaluating Binary Classifiers on Imbalanced Datasets. *PLoS ONE*. 2015;10(3):e0118432. https://doi.org/10.1371/journal.pone.0118432
+7. Rutter CM. Bootstrap estimation of diagnostic accuracy with patient-clustered data. *Academic Radiology*. 2000;7(6):413–419. https://doi.org/10.1016/S1076-6332(00)80381-5
