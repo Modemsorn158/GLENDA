@@ -18,6 +18,7 @@ class TuningReportTests(unittest.TestCase):
             for fold in range(5):
                 directory = root / f"trial_000/fold_{fold}"; directory.mkdir(parents=True)
                 (directory / "epochs.csv").write_text("epoch,training_loss,validation_average_precision\n1,0.4,0.5\n")
+                (directory / "config.json").write_text('{}')
             summarize(root, root / "report.md")
             self.assertIn("0.5000", (root / "report.md").read_text())
             self.assertTrue((root / "report.epochs.csv").exists())

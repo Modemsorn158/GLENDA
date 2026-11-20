@@ -18,7 +18,7 @@ def summarize(search: Path, output: Path) -> None:
              "The candidates were chosen after the feasibility experiments and evaluated on the same development folds. "
              "The table is selection data, not an unbiased performance estimate. Both learning rate and fine-tuning depth differ.", "",
              "| Trial | Fine-tuning | Learning rate | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean AP | SD |", "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
-    results, epoch_rows = [], []
+    results, epoch_rows, runtime = [], [], []
     for trial, config in enumerate(identity["configurations"]):
         rows = sorted((r for r in folds if r["trial"] == trial), key=lambda row: row["fold"])
         if len(rows) != 5 or [r["fold"] for r in rows] != list(range(5)) or any(r["status"] != "complete" for r in rows):
@@ -30,13 +30,17 @@ def summarize(search: Path, output: Path) -> None:
         mean, sd = float(np.mean(scores)), float(np.std(scores, ddof=1))
         lines.append(f"| {trial} | {config['fine_tuning']} | {config['lr']:.4g} | " + " | ".join(f"{s:.4f}" for s in scores) + f" | {mean:.4f} | {sd:.4f} |")
         results.append({"trial": trial, "scores": scores, "mean": mean, "sample_sd": sd})
+        run_config = json.loads((search / f"trial_{trial:03d}/fold_0/config.json").read_text(encoding="utf-8"))
+        for path_key in ("raw", "manifest", "output", "weights_cache"):
+            run_config.pop(path_key, None)
+        runtime.append(run_config)
     if selected["trial_index"] != int(np.argmax([r["mean"] for r in results])):
         raise ValueError("Frozen selection does not match fold scores")
     lines.extend(["", f"Selected trial: **{selected['trial_index']}**, using the prespecified highest-mean-AP rule.", "",
                   "Variation is descriptive. A short training budget, source imbalance and unknown patient overlap limit interpretation.\n"])
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("\n".join(lines), encoding="utf-8")
-    output.with_suffix(".json").write_text(json.dumps({"identity": identity, "selection": selected, "results": results}, indent=2), encoding="utf-8")
+    output.with_suffix(".json").write_text(json.dumps({"identity": identity, "selection": selected, "results": results, "runtime": runtime}, indent=2), encoding="utf-8")
     with output.with_suffix(".epochs.csv").open("w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["trial", "fold", "epoch", "training_loss", "validation_average_precision"])
         writer.writeheader(); writer.writerows(epoch_rows)
