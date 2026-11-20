@@ -12,6 +12,6 @@ The supplied 15-page report describes a 114-frame test set with 38 positive and 
 
 ## Status
 
-One CPU smoke run used eight development frames, one epoch and a randomly initialized frozen EfficientNet-B0. This verifies execution only and is not a research experiment. No pretrained comparison, hyperparameter search, final model or test evaluation has been completed. A split manifest alone does not make the evaluation independent, clinically representative, or prospectively locked. Model and threshold choices must be fixed without using test predictions. External data are required for an external validation claim.
+Two CPU smoke runs each used eight development frames and one epoch with frozen EfficientNet-B0 features: one randomly initialized and one initialized with ImageNet weights. These verify execution only and are not research experiments. No pretrained comparison, hyperparameter search, final model or test evaluation has been completed. A split manifest alone does not make the evaluation independent, clinically representative, or prospectively locked. Model and threshold choices must be fixed without using test predictions. External data are required for an external validation claim.
 
 Dataset: Leibetseder et al., *GLENDA: Gynecologic Laparoscopy Endometriosis Dataset*, MMM 2020, https://doi.org/10.1007/978-3-030-37734-2_36. Dataset documentation: https://ftp.itec.aau.at/datasets/GLENDA/ (non-commercial scientific research only; citation required).

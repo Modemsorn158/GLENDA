@@ -10,6 +10,14 @@ from torchvision.models import (
 )
 
 
+def pretrained_url(architecture: str) -> str:
+    if architecture == "efficientnet_b0":
+        return EfficientNet_B0_Weights.IMAGENET1K_V1.url
+    if architecture == "resnet50":
+        return ResNet50_Weights.IMAGENET1K_V2.url
+    raise ValueError(f"Unknown architecture: {architecture}")
+
+
 def build_model(architecture: str, fine_tuning: str, pretrained: bool = True) -> nn.Module:
     """Create an ImageNet initialization or an explicitly untrained smoke-test model.
 

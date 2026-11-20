@@ -48,7 +48,7 @@ def run(raw: Path, manifest: Path, config_path: Path, output: Path) -> None:
                 status_file.write_text(json.dumps(status, indent=2), encoding="utf-8")
             else:
                 run_dir.parent.mkdir(parents=True, exist_ok=True)
-                command = [sys.executable, "-m", "glenda.train_fold", str(raw), str(manifest.resolve()), str(run_dir), "--fold", str(fold)]
+                command = [sys.executable, "-m", "glenda.train_fold", str(raw), str(manifest.resolve()), str(run_dir), "--fold", str(fold), "--weights-cache", str(output / ".torch-cache")]
                 for key, value in config.items():
                     flag = "--" + key.replace("_", "-")
                     if isinstance(value, bool):
