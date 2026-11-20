@@ -1,0 +1,37 @@
+{
+  "description": "Recorded SHA-256 identifiers; associated private data and artifacts are not distributed here.",
+  "limitations": "Hashes support integrity checks, not patient independence, clinical validity, or reproducibility without the original artifacts.",
+  "archives": {
+    "Glenda_v1.5_classes.zip": "4561d11ba3732f50efe8e5ce69c9d5863ee66e7dc73a0011ca7b69e9d6fac4c4",
+    "GLENDA_v1.5_no_pathology.zip": "99e448fa5b4e662da65fd69af2d8066c8196e5e3f838946c237829f36c4dfc1d"
+  },
+  "inventory_sha256": "5bf43601df1264cd34548dc0ab65c3a3a98f58be47a864702c31a41286641ca4",
+  "parent_manifest_sha256": "54363c0c6891f3e8dd80d840d080f8e3659dfb172fd72a13b2b3b0e20769c22c",
+  "manifest_sha256": "5dd806f19796402b87087e4d625c2962cc69fd8ae24ff09e4f223936d5a6c7c2",
+  "holdout_sha256": "67c90737b7eb42800f47f5556843e1b483c3077cd53dae325806a05b8d4f65bf",
+  "search_sha256": "864f916181b3247cf8fb23c8cd1c41cef003ddce48ca48935bf5e3c6d922acb5",
+  "fold_results_sha256": "1762b375c036dbf7bd86eb2d76df6bf0d7deb05a8401c52e2bd6204a753ede60",
+  "fold_prediction_sha256": [
+    "c324eb3608a56e3155265bb16b370c5a715e24156e7bfc57b349278520947f58",
+    "96102a3fc97c1a209ef91a52ca88fcfe2e0408ed79e44e95c1048d6e13f34e4e",
+    "5eeceab0e2287bac051b81fd64d72b5f621d97a29e3cfdf3ee14b506f25174de",
+    "311a0810b1082b21d548c9cfa2424824e081ee508a3da96274a28745d794adaf",
+    "c5028163ab01638bc114b5c179c5a980b04c3cabe98461a28da505a4fafceff0"
+  ],
+  "threshold_file_sha256": "af25b47cdf273119573de4b867aa06e1896aec43cda92170b3eeed3480b6ada9",
+  "pretrained_weights_sha256": "7f5810bc96def8f7552d5b7e68d53c4786f81167d28291b21c0d90e1fca14934",
+  "checkpoint_sha256": "fbcfebbd76c95fd260cd46813eb62c30a1741619b219ac56f0d382a0c45f84ce",
+  "test_predictions_sha256": "b6829bfaf31435b18ef5f8ebedf7cee6b9721ac1d39b4d9e1ec6ac012263fec5",
+  "training_source_sha256": {
+    "dataset.py": "645e39eb3ae93ce909f7a3c57a5ade0832afbe70d67e3c284a0a5323a2198ea4",
+    "models.py": "977f0eca0d6208eef41fa233ee85517b008fd9b1fac869a552f53ed2247bf323",
+    "train_fold.py": "496f968884c7114229ef5c3cf2cf93960ad694a42bff54bf8a1d8763f4410513"
+  },
+  "evaluation_source_sha256": {
+    "evaluate_test.py": "d0eeb3be7a50b336c6311fcfd057f282d869eba12c9780efee65c7e4be93e2fa",
+    "evaluation.py": "eae949211f965f85fdd85b870ad2f68b673ecbdafbc678358222230bdfaaffac",
+    "inference.py": "59203f6911f5fbd0f9afc9aa5ed7c3ea860720a0de4513701a7036b3620edbf6",
+    "dataset.py": "645e39eb3ae93ce909f7a3c57a5ade0832afbe70d67e3c284a0a5323a2198ea4",
+    "models.py": "977f0eca0d6208eef41fa233ee85517b008fd9b1fac869a552f53ed2247bf323"
+  }
+}

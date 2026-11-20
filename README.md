@@ -2,6 +2,12 @@
 
 This research rebuild includes development-fold experiments, short tuning, a final fit and a one-time internal holdout evaluation. At the fixed threshold the model missed 55 of 75 positive holdout frames; only three known groups contributed negative frames, and patient-level independence is not guaranteed. The project is for research only and does not support clinical use. The original data are kept separately in `../read_only/raw` and are never modified by the audit. See the [research report](reports/research_report.md), [methodology](docs/methodology.md) and [literature notes](docs/literature.md).
 
+The project software is distributed under the [MIT License](LICENSE). This does not grant rights to the GLENDA dataset, images derived from it, or third-party pretrained weights: their own terms apply. The dataset is restricted to non-commercial scientific research and requires attribution, as described below. Model checkpoints and patient images are not included in this repository.
+
+GitHub Actions is configured to run CPU tests on Windows and Linux, using synthetic data without downloading the research dataset or pretrained weights. The local commands below also run them. Image and checkpoint files are broadly ignored to reduce the risk of accidentally committing medical data; any future exception for an approved, non-sensitive figure should be narrow and reviewed.
+
+The [artifact manifest](reports/artifact_manifest.json) records hashes from the study's public summaries without publishing private images, predictions, or checkpoints. Run `python -m glenda.artifact_manifest` to reconstruct it, or add `--verify-local` to check available local study artifacts against the recorded hashes without evaluating the holdout again. These hashes do not establish patient independence or provide the private artifacts needed to reproduce the study.
+
 ## Dataset inventory
 
 Install Python and the project training dependencies (`python -m pip install -e '.[training]'`), then run from this directory (PowerShell). Inventory and archive checks alone require Pillow; the full test suite also requires PyTorch, torchvision, scikit-learn and Matplotlib.
