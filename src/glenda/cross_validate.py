@@ -59,7 +59,7 @@ def run(raw: Path, manifest: Path, config_path: Path, output: Path) -> None:
                 with (run_dir.parent / f"fold_{fold}.log").open("w", encoding="utf-8") as log:
                     result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, check=False)
                 status = {"status": "failed", "exit_code": result.returncode}
-                if result.returncode == 0 and (run_dir / "best.pt").is_file():
+                if result.returncode == 0 and (run_dir / "best.pt").is_file() and (run_dir / "validation_predictions.csv").is_file():
                     with (run_dir / "epochs.csv").open(encoding="utf-8", newline="") as f:
                         scores = [float(row["validation_average_precision"]) for row in csv.DictReader(f)]
                     if scores:

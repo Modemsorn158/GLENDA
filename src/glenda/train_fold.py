@@ -40,7 +40,7 @@ def train(args):
     args.output.mkdir(parents=True)
     os.environ["TORCH_HOME"] = str(cache)
     config = {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()}
-    config.update(device=str(device), torch_version=torch.__version__, torchvision_version=torchvision.__version__,
+    config.update(device=str(device), torch_version=str(torch.__version__), torchvision_version=str(torchvision.__version__),
                   sklearn_version=sklearn.__version__, python_version=platform.python_version(),
                   cuda_version=torch.version.cuda, manifest_sha256=hashlib.sha256(args.manifest.read_bytes()).hexdigest(),
                   transforms="resize 224x224; training horizontal flip; ImageNet normalization")
@@ -73,16 +73,23 @@ def train(args):
                 loss = criterion(logits, y)
                 loss.backward(); optimizer.step()
                 total_loss += loss.item() * len(y)
-            model.eval(); labels, scores = [], []
+            model.eval(); labels, scores, paths = [], [], []
             with torch.no_grad():
-                for x, y, _ in val_loader:
+                for x, y, batch_paths in val_loader:
                     labels.extend(y.tolist()); scores.extend(torch.sigmoid(model(x.to(device)).flatten()).cpu().tolist())
+                    paths.extend(batch_paths)
             ap = float(average_precision_score(labels, scores))
             writer.writerow(dict(epoch=epoch, training_loss=total_loss / len(train_data), validation_average_precision=ap)); f.flush()
             print(f"epoch={epoch} validation_ap={ap:.6f}", flush=True)
             if ap > best:
                 best, stale = ap, 0
                 torch.save({"state_dict": model.state_dict(), "config": config, "epoch": epoch, "validation_ap": ap}, args.output / "best.pt")
+                groups = {row["path"]: row["group"] for row in val_data.rows}
+                with (args.output / "validation_predictions.csv").open("w", newline="", encoding="utf-8") as predictions:
+                    pred_writer = csv.DictWriter(predictions, fieldnames=["path", "label", "score", "group"])
+                    pred_writer.writeheader()
+                    pred_writer.writerows({"path": path, "label": label, "score": score, "group": groups[path]}
+                                          for path, label, score in zip(paths, labels, scores))
             else:
                 stale += 1
                 if stale >= args.patience:

@@ -21,6 +21,7 @@ class CrossValidationTests(unittest.TestCase):
                 destination = Path(command[5]); destination.mkdir()
                 (destination / "best.pt").write_bytes(b"checkpoint")
                 (destination / "epochs.csv").write_text("validation_average_precision\n0.25\n", encoding="utf-8")
+                (destination / "validation_predictions.csv").write_text("path,label,score,group\n", encoding="utf-8")
                 return SimpleNamespace(returncode=0)
             with patch("glenda.cross_validate.subprocess.run", side_effect=fake_run) as worker, contextlib.redirect_stdout(io.StringIO()):
                 run(raw, manifest, config, root / "runs")

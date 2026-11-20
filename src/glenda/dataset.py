@@ -21,10 +21,12 @@ def preprocessing(training: bool):
 
 
 class DevelopmentDataset(Dataset):
-    """Expose exactly the training or validation portion of one development fold."""
+    """Expose a development fold or, for final fitting, all development rows."""
 
-    def __init__(self, root: Path, manifest: Path, fold: int, training: bool):
-        if fold not in range(5):
+    def __init__(self, root: Path, manifest: Path, fold: int | None, training: bool):
+        if fold is None and not training:
+            raise ValueError("All-development data is only available for fitting")
+        if fold is not None and fold not in range(5):
             raise ValueError("Fold must be between 0 and 4")
         self.root = root.resolve()
         self.transform = preprocessing(training)
@@ -47,7 +49,7 @@ class DevelopmentDataset(Dataset):
             if previous != assignment:
                 raise ValueError("Group spans partitions or validation folds")
         self.rows = [r for r in rows if r["partition"] == "development" and
-                     ((int(r["cv_fold"]) != fold) if training else (int(r["cv_fold"]) == fold))]
+                     (fold is None or ((int(r["cv_fold"]) != fold) if training else (int(r["cv_fold"]) == fold)))]
         if not self.rows or {r["label"] for r in self.rows} != {"0", "1"}:
             raise ValueError("The selected fold must contain both labels")
 
