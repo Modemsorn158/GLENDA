@@ -1,0 +1,70 @@
+{
+  "selection": {
+    "threshold": 0.9999728202819824,
+    "oof_f1": 0.3982558139534884,
+    "n": 11048,
+    "trial_index": 1,
+    "trial_configuration": {
+      "architecture": "efficientnet_b0",
+      "fine_tuning": "partial",
+      "lr": 0.0001,
+      "batch_size": 16,
+      "epochs": 3,
+      "patience": 2,
+      "weighted": true
+    },
+    "candidate_selection_sha256": "53eb3727565deeff28e2b4a2068fbf771be7d1c342431e8d396aff6802787896",
+    "fold_prediction_sha256": [
+      "c324eb3608a56e3155265bb16b370c5a715e24156e7bfc57b349278520947f58",
+      "96102a3fc97c1a209ef91a52ca88fcfe2e0408ed79e44e95c1048d6e13f34e4e",
+      "5eeceab0e2287bac051b81fd64d72b5f621d97a29e3cfdf3ee14b506f25174de",
+      "311a0810b1082b21d548c9cfa2424824e081ee508a3da96274a28745d794adaf",
+      "c5028163ab01638bc114b5c179c5a980b04c3cabe98461a28da505a4fafceff0"
+    ],
+    "rule": "Maximize pooled development out-of-fold F1; ties choose highest threshold",
+    "manifest_sha256": "5dd806f19796402b87087e4d625c2962cc69fd8ae24ff09e4f223936d5a6c7c2",
+    "warning": "Threshold and F1 are selected on the same out-of-fold predictions; F1 is optimistic and is not a test result."
+  },
+  "folds": [
+    {
+      "fold": 0,
+      "median_score": 0.9950182437896729,
+      "p99_score": 0.9999997615814209,
+      "scores_exactly_one": 13,
+      "predicted_positive": 290,
+      "recall": 0.7
+    },
+    {
+      "fold": 1,
+      "median_score": 0.02716127224266529,
+      "p99_score": 0.9999733352661133,
+      "scores_exactly_one": 0,
+      "predicted_positive": 29,
+      "recall": 0.4915254237288136
+    },
+    {
+      "fold": 2,
+      "median_score": 0.49319249391555786,
+      "p99_score": 0.9999941205978393,
+      "scores_exactly_one": 2,
+      "predicted_positive": 25,
+      "recall": 0.4166666666666667
+    },
+    {
+      "fold": 3,
+      "median_score": 0.12620510160923004,
+      "p99_score": 0.9999852418899536,
+      "scores_exactly_one": 0,
+      "predicted_positive": 27,
+      "recall": 0.36666666666666664
+    },
+    {
+      "fold": 4,
+      "median_score": 0.46369829773902893,
+      "p99_score": 0.9999544048309326,
+      "scores_exactly_one": 0,
+      "predicted_positive": 19,
+      "recall": 0.3220338983050847
+    }
+  ]
+}

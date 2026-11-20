@@ -1,0 +1,127 @@
+{
+  "identity": {
+    "manifest_sha256": "5dd806f19796402b87087e4d625c2962cc69fd8ae24ff09e4f223936d5a6c7c2",
+    "configurations": [
+      {
+        "architecture": "efficientnet_b0",
+        "fine_tuning": "frozen",
+        "lr": 0.0003,
+        "batch_size": 16,
+        "epochs": 3,
+        "patience": 2,
+        "weighted": true
+      },
+      {
+        "architecture": "efficientnet_b0",
+        "fine_tuning": "partial",
+        "lr": 0.0001,
+        "batch_size": 16,
+        "epochs": 3,
+        "patience": 2,
+        "weighted": true
+      }
+    ],
+    "training_source_sha256": {
+      "dataset.py": "645e39eb3ae93ce909f7a3c57a5ade0832afbe70d67e3c284a0a5323a2198ea4",
+      "models.py": "977f0eca0d6208eef41fa233ee85517b008fd9b1fac869a552f53ed2247bf323",
+      "train_fold.py": "496f968884c7114229ef5c3cf2cf93960ad694a42bff54bf8a1d8763f4410513"
+    },
+    "python_version": "3.14.7"
+  },
+  "selection": {
+    "trial_index": 1,
+    "configuration": {
+      "architecture": "efficientnet_b0",
+      "fine_tuning": "partial",
+      "lr": 0.0001,
+      "batch_size": 16,
+      "epochs": 3,
+      "patience": 2,
+      "weighted": true
+    },
+    "mean_average_precision": [
+      0.5786809481572768,
+      0.7329592932905004
+    ],
+    "rule": "Highest mean development average precision; exact ties use the first configuration",
+    "search_sha256": "864f916181b3247cf8fb23c8cd1c41cef003ddce48ca48935bf5e3c6d922acb5",
+    "fold_results_sha256": "1762b375c036dbf7bd86eb2d76df6bf0d7deb05a8401c52e2bd6204a753ede60",
+    "warning": "Candidate selection uses development folds and is not a test estimate."
+  },
+  "results": [
+    {
+      "trial": 0,
+      "scores": [
+        0.4908417082883229,
+        0.713846716881122,
+        0.5375427627858841,
+        0.4051494425975665,
+        0.7460241102334882
+      ],
+      "mean": 0.5786809481572768,
+      "sample_sd": 0.14645373391160058
+    },
+    {
+      "trial": 1,
+      "scores": [
+        0.5347548228601903,
+        0.8102482214923907,
+        0.7488421282590119,
+        0.6828999955150937,
+        0.8880512983258156
+      ],
+      "mean": 0.7329592932905004,
+      "sample_sd": 0.13422957785770867
+    }
+  ],
+  "runtime": [
+    {
+      "fold": 0,
+      "seed": 42,
+      "architecture": "efficientnet_b0",
+      "fine_tuning": "frozen",
+      "epochs": 3,
+      "patience": 2,
+      "batch_size": 16,
+      "lr": 0.0003,
+      "weight_decay": 0.0001,
+      "weighted": true,
+      "random_init": false,
+      "cpu": false,
+      "device": "cuda",
+      "torch_version": "2.15.0+cu132",
+      "torchvision_version": "0.29.2+cu132",
+      "sklearn_version": "1.9.1",
+      "python_version": "3.14.7",
+      "cuda_version": "13.2",
+      "manifest_sha256": "5dd806f19796402b87087e4d625c2962cc69fd8ae24ff09e4f223936d5a6c7c2",
+      "transforms": "resize 224x224; training horizontal flip; ImageNet normalization",
+      "pretrained_weights_url": "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth",
+      "pretrained_weights_sha256": "7f5810bc96def8f7552d5b7e68d53c4786f81167d28291b21c0d90e1fca14934"
+    },
+    {
+      "fold": 0,
+      "seed": 42,
+      "architecture": "efficientnet_b0",
+      "fine_tuning": "partial",
+      "epochs": 3,
+      "patience": 2,
+      "batch_size": 16,
+      "lr": 0.0001,
+      "weight_decay": 0.0001,
+      "weighted": true,
+      "random_init": false,
+      "cpu": false,
+      "device": "cuda",
+      "torch_version": "2.15.0+cu132",
+      "torchvision_version": "0.29.2+cu132",
+      "sklearn_version": "1.9.1",
+      "python_version": "3.14.7",
+      "cuda_version": "13.2",
+      "manifest_sha256": "5dd806f19796402b87087e4d625c2962cc69fd8ae24ff09e4f223936d5a6c7c2",
+      "transforms": "resize 224x224; training horizontal flip; ImageNet normalization",
+      "pretrained_weights_url": "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth",
+      "pretrained_weights_sha256": "7f5810bc96def8f7552d5b7e68d53c4786f81167d28291b21c0d90e1fca14934"
+    }
+  ]
+}
