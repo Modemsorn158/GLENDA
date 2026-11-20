@@ -33,6 +33,11 @@ def summarize(search: Path, protocol: Path, output: Path) -> None:
                   "Unknown patient links, curated prevalence and model selection limit interpretation.\n"])
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("\n".join(lines), encoding="utf-8")
+    run_config = json.loads((search / "trial_000/fold_0/config.json").read_text(encoding="utf-8"))
+    for path_key in ("raw", "manifest", "output", "weights_cache"):
+        run_config.pop(path_key, None)
+    record = {"search": identity, "split": split, "folds": folds, "summary": s, "runtime": run_config}
+    output.with_suffix(".json").write_text(json.dumps(record, indent=2), encoding="utf-8")
 
 
 def main():

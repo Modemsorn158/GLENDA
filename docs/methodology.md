@@ -8,7 +8,7 @@ Link all frames with the same known case, video, exact SHA-256 digest, or differ
 
 ## Historical report
 
-The supplied 15-page report describes a 114-frame test set with 38 positive and 76 negative images, and a 1:2 sampling ratio. That is not 10% of the 13,811 released frames. It reports grouped folds and a later grouped internal validation correction, but its stated scores are historical claims, not verified outputs of this rebuild. It also acknowledges the altered test prevalence and lack of ROC/PR curves. Its optimizer and learning-rate interpretations should not be treated as causal without controlled comparisons. Thai text extraction is imperfect; interpretation should be checked against the original pages.
+The supplied 15-page report describes a 114-frame test set with 38 positive and 76 negative images, and a 1:2 sampling ratio. That is not 10% of the 13,811 released frames. It reports grouped folds and a later grouped internal validation correction, but its stated scores are historical claims, not verified outputs of this rebuild. It also acknowledges the altered test prevalence and lack of ROC/PR curves. Its optimizer and learning-rate interpretations should not be treated as causal without controlled comparisons. Thai text extraction is imperfect; interpretation should be checked against the original pages. The preserved repository's original `main` commit contains four `src/data` files and no training or evaluation scripts, so the report's reported model-selection and test execution cannot be independently reconstructed from that snapshot. Its `splits.py` groups records into case and video lists but does not itself construct or validate train/test partitions.
 
 ## Status
 

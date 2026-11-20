@@ -12,10 +12,13 @@ python -m glenda.inventory ..\read_only\raw outputs\audit
 python -m unittest discover -s tests -v
 ```
 
+The tested GPU environment uses Windows x64, Python 3.14.7 and CUDA-enabled PyTorch 2.15.0+cu132. Its installed package versions are recorded in `requirements-gpu.lock`; install them in a fresh virtual environment with `python -m pip install -r requirements-gpu.lock --extra-index-url https://download.pytorch.org/whl/cu132`. CUDA availability depends on the local NVIDIA driver. The lock records versions, not package hashes or a guarantee of bitwise reproducibility; other platforms may require different builds. A CPU environment is sufficient for smoke tests.
+
 The inventory checks positive images against the supplied COCO file, decodes every frame, records SHA-256 hashes, and reports exact duplicates and unreadable files. Derived files go in `outputs/`, which is ignored by Git. To screen cross-component near duplicates and create a development/test manifest, install the project dependencies (`python -m pip install -e .`), then run:
 
 ```powershell
 python -m glenda.near_duplicates ..\read_only\raw outputs\audit\inventory.csv outputs\audit\near_duplicates.csv
+python -m glenda.exploration outputs\audit\inventory.csv outputs\audit\composition.png
 python -m glenda.make_splits outputs\audit\inventory.csv outputs\audit\near_duplicates.csv outputs\splits\v1
 ```
 

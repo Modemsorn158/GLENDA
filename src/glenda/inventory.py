@@ -56,8 +56,10 @@ def audit(root: Path, out: Path) -> dict:
             m = NEGATIVE.fullmatch(path.parent.name)
             if not m or not re.fullmatch(r"f_\d+\.jpg", path.name):
                 raise ValueError(f"Unrecognized negative path: {path}")
-            video, _, _ = m.groups()
+            video, start, end = m.groups()
             frame = path.stem[2:]
+            if not int(start) <= int(frame) < int(end):
+                raise ValueError(f"Negative frame outside declared sequence bounds: {path}")
             case = next(iter(by_video[video])) if video in by_video else ""
             classes = []
             provenance = "release_no_pathology_sequence"

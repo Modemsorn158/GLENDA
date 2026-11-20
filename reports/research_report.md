@@ -18,7 +18,7 @@ Leibetseder and colleagues introduced GLENDA [1]; the v1.5 release distinguishes
 
 The supplied v1.5 files contain 13,811 JPEG frames, including 373 COCO-annotated positive images and 13,438 images from no-pathology sequences. The audit recorded 628 region annotations, 102 positive case identifiers, 205 positive videos and 20 negative videos. Five negative video IDs also occur among positive cases and were linked to those cases. Fifteen negative video IDs have no known case identifier in the supplied files. All frames decoded; 325 byte-identical duplicate sets were found, with no exact cross-label sets. A 64-bit difference-hash screen at Hamming distance at most three identified 15 cross-component candidates; visual inspection showed that some were false matches, so conservative linking reduces available independence without proving image identity. It can miss other near duplicates. The generated inventory and audit summary reside under `outputs/audit/`.
 
-The negative label describes the released counterexample sequences; it is not a histological confirmation for every frame. The 2.7% positive fraction describes this curated release, not an estimate of clinical prevalence.
+The negative label describes the released counterexample sequences; it is not a histological confirmation for every frame. The 2.7% positive fraction describes this curated release, not an estimate of clinical prevalence. The generated `outputs/audit/composition.png` shows the large difference between negative-sequence and positive-keyframe counts per video, a potential source shortcut.
 
 ## Methodology
 
