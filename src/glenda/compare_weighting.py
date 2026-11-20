@@ -40,8 +40,14 @@ def compare(unweighted: Path, weighted: Path, output: Path) -> None:
               "and unknown patient overlap, curated prevalence and source-video effects limit inference.\n"]
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("\n".join(lines), encoding="utf-8")
+    runtime = []
+    for directory in (unweighted, weighted):
+        config = json.loads((directory / "trial_000/fold_0/config.json").read_text(encoding="utf-8"))
+        for path_key in ("raw", "manifest", "output", "weights_cache"):
+            config.pop(path_key, None)
+        runtime.append(config)
     output.with_suffix(".json").write_text(json.dumps({"unweighted": left, "weighted": right, "folds": results,
-                                                       "mean_paired_difference": float(np.mean(diffs))}, indent=2), encoding="utf-8")
+                                                       "runtime": runtime, "mean_paired_difference": float(np.mean(diffs))}, indent=2), encoding="utf-8")
 
 
 def main():

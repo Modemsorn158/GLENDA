@@ -6,6 +6,7 @@ import csv
 import hashlib
 import json
 import os
+from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -77,12 +78,31 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
         with (output / f"{name}.csv").open("w", encoding="utf-8", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=["path", "label", "score", "group"]); writer.writeheader()
             writer.writerows(sorted((p for p in predictions if predicate(p)), key=lambda p: p["score"], reverse=True))
+    by_group = defaultdict(list)
+    for prediction in predictions:
+        by_group[prediction["group"]].append(prediction)
+    with (output / "group_errors.csv").open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["group", "frames", "positives", "false_positives", "false_negatives"]); writer.writeheader()
+        for group, items in sorted(by_group.items()):
+            writer.writerow({"group": group, "frames": len(items), "positives": sum(p["label"] for p in items),
+                             "false_positives": sum(p["label"] == 0 and p["score"] >= threshold for p in items),
+                             "false_negatives": sum(p["label"] == 1 and p["score"] < threshold for p in items)})
     fpr, tpr, _ = roc_curve(labels, scores); precision, recall, _ = precision_recall_curve(labels, scores)
     observed, predicted = calibration_curve(labels, scores, n_bins=10, strategy="uniform")
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+    fig, axes = plt.subplots(2, 2, figsize=(11, 9)); axes = axes.flatten()
     axes[0].plot(fpr, tpr); axes[0].plot([0, 1], [0, 1], "--", color="gray"); axes[0].set(xlabel="False positive rate", ylabel="Sensitivity", title="ROC")
     axes[1].plot(recall, precision); axes[1].axhline(float(labels.mean()), linestyle="--", color="gray"); axes[1].set(xlabel="Recall", ylabel="Precision", title="Precision-recall")
     axes[2].plot(predicted, observed, marker="o"); axes[2].plot([0, 1], [0, 1], "--", color="gray"); axes[2].set(xlabel="Mean score", ylabel="Observed fraction", title="Calibration")
+    grid = np.linspace(0, 1, 101)
+    grid_precision, grid_recall = [], []
+    for t in grid:
+        positive = scores >= t
+        true_positive = np.sum((labels == 1) & positive)
+        grid_precision.append(true_positive / positive.sum() if positive.any() else np.nan)
+        grid_recall.append(true_positive / np.sum(labels == 1))
+    axes[3].plot(grid, grid_precision, label="Precision"); axes[3].plot(grid, grid_recall, label="Recall")
+    axes[3].axvline(threshold, linestyle="--", color="gray", label="Fixed threshold")
+    axes[3].set(xlabel="Threshold", ylabel="Metric", title="Threshold sensitivity", ylim=(0, 1)); axes[3].legend()
     fig.tight_layout(); fig.savefig(output / "evaluation.png", dpi=150); plt.close(fig)
     lock.write_text(json.dumps({"manifest_sha256": digest, "checkpoint_sha256": hashlib.sha256(checkpoint.read_bytes()).hexdigest(),
                                 "output": str(output), "threshold": threshold, "status": "complete"}, indent=2), encoding="utf-8")

@@ -20,14 +20,16 @@ def summarize(search: Path, protocol: Path, output: Path) -> None:
     lines = ["# Five-fold feasibility results", "",
              "Generated from `outputs/search/feasibility/` and the recorded split protocol. "
              "This is a single one-epoch configuration, not a comparison or held-out test.", "",
-             "| Development fold | Positive frames | Negative frames | Average precision |", "|---:|---:|---:|---:|"]
+             "The constant-score baseline has average precision equal to the fold's positive-frame fraction.", "",
+             "| Development fold | Positive frames | Negative frames | Constant-score AP | Model AP |", "|---:|---:|---:|---:|---:|"]
     for row in sorted(folds, key=lambda item: item["fold"]):
         count = split["validation_counts"][str(row["fold"])]
         with (search / "trial_000" / f"fold_{row['fold']}" / "validation_predictions.csv").open(encoding="utf-8", newline="") as f:
             observed = Counter(item["label"] for item in csv.DictReader(f))
         if dict(observed) != count:
             raise ValueError("Prediction counts do not match the split protocol")
-        lines.append(f"| {row['fold']} | {count.get('1', 0)} | {count.get('0', 0)} | {row['best_validation_average_precision']:.4f} |")
+        positive, negative = count.get("1", 0), count.get("0", 0)
+        lines.append(f"| {row['fold']} | {positive} | {negative} | {positive / (positive + negative):.4f} | {row['best_validation_average_precision']:.4f} |")
     lines.extend(["", f"Mean average precision: **{s['mean_average_precision']:.4f}**; sample standard deviation: **{s['std_average_precision']:.4f}**.",
                   "", "Fold variation is descriptive and does not establish statistical significance. "
                   "Unknown patient links, curated prevalence and model selection limit interpretation.\n"])

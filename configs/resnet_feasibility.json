@@ -1,0 +1,3 @@
+[
+  {"architecture": "resnet50", "fine_tuning": "frozen", "lr": 0.0003, "batch_size": 16, "epochs": 1, "patience": 1}
+]
