@@ -27,18 +27,30 @@ def run(raw: Path, manifest: Path, config_path: Path, output: Path) -> None:
             raise ValueError("Unknown configuration option")
         if any(not isinstance(config.get(key, False), bool) for key in ("weighted", "cpu", "random_init")):
             raise ValueError("Boolean options must be true or false")
+    source_files = [Path(__file__).with_name(name) for name in ("dataset.py", "models.py", "train_fold.py")]
+    def source_hashes():
+        return {file.name: hashlib.sha256(file.read_bytes()).hexdigest() for file in source_files}
     identity = {"manifest_sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(),
-                "configurations": configurations}
+                "configurations": configurations, "training_source_sha256": source_hashes(),
+                "python_version": sys.version.split()[0]}
     output.mkdir(parents=True, exist_ok=True)
     identity_file = output / "search.json"
     if identity_file.exists():
-        if json.loads(identity_file.read_text(encoding="utf-8")) != identity:
+        saved = json.loads(identity_file.read_text(encoding="utf-8"))
+        if "training_source_sha256" not in saved:
+            # Legacy runs predate source fingerprinting; permit resume but report the limitation.
+            if any(saved.get(k) != identity[k] for k in ("manifest_sha256", "configurations")):
+                raise ValueError("Existing search uses different configurations or manifest")
+            print("Warning: legacy search did not record training-source hashes", flush=True)
+        elif saved != identity:
             raise ValueError("Existing search uses different configurations or manifest")
     else:
         identity_file.write_text(json.dumps(identity, indent=2), encoding="utf-8")
     results, summaries = [], []
     for trial, config in enumerate(configurations):
         for fold in range(5):
+            if source_hashes() != identity["training_source_sha256"]:
+                raise RuntimeError("Training source changed during search; refusing to start another fold")
             run_dir = output / f"trial_{trial:03d}" / f"fold_{fold}"
             status_file = run_dir.parent / f"fold_{fold}_status.json"
             if status_file.exists():

@@ -15,7 +15,7 @@ from glenda.splitting import connected_groups
 def dhash(path: Path) -> int:
     with Image.open(path) as image:
         image = ImageOps.grayscale(image).resize((9, 8), Image.Resampling.LANCZOS)
-        pixels = list(image.getdata())
+        pixels = list(image.get_flattened_data() if hasattr(image, "get_flattened_data") else image.getdata())
     result = 0
     for row in range(8):
         for col in range(8):

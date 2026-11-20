@@ -24,6 +24,15 @@ class ArchitectureComparisonTests(unittest.TestCase):
                 (run / "fold_results.json").write_text(json.dumps(rows))
             compare(root / "a", root / "b", root / "comparison.md")
             self.assertIn("+0.0000", (root / "comparison.md").read_text())
+            for name, depth in (("a", "frozen"), ("b", "partial")):
+                run = root / name
+                (run / "search.json").write_text(json.dumps({"manifest_sha256": "same", "configurations": [{"architecture": "efficientnet_b0", "fine_tuning": depth}]}))
+                for fold in range(5):
+                    file = run / f"trial_000/fold_{fold}/config.json"
+                    config = json.loads(file.read_text()); config.update(architecture="efficientnet_b0", fine_tuning=depth, pretrained_weights_sha256="same")
+                    file.write_text(json.dumps(config))
+            compare(root / "a", root / "b", root / "depth.md", "fine_tuning")
+            self.assertIn("+0.0000", (root / "depth.md").read_text())
             (root / "b/search.json").write_text(json.dumps({"manifest_sha256": "same", "configurations": [{"architecture": "resnet50", "epochs": 2}]}))
             with self.assertRaises(ValueError):
                 compare(root / "a", root / "b", root / "other.md")

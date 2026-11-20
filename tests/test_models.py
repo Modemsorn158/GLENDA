@@ -34,6 +34,11 @@ class ModelTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 DevelopmentDataset(Path(temp), path, 0, True)
 
+    def test_partial_finetuning_leaves_earlier_features_frozen(self):
+        model = build_model("efficientnet_b0", "partial", pretrained=False)
+        self.assertTrue(all(not p.requires_grad for p in model.features[:-3].parameters()))
+        self.assertTrue(all(p.requires_grad for p in model.features[-3:].parameters()))
+
     def test_training_cannot_write_into_raw_data(self):
         with tempfile.TemporaryDirectory() as temp:
             with self.assertRaises(ValueError):
