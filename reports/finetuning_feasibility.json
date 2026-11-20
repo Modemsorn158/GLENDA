@@ -1,0 +1,103 @@
+{
+  "searches": [
+    {
+      "manifest_sha256": "54363c0c6891f3e8dd80d840d080f8e3659dfb172fd72a13b2b3b0e20769c22c",
+      "configurations": [
+        {
+          "architecture": "efficientnet_b0",
+          "fine_tuning": "frozen",
+          "lr": 0.0003,
+          "batch_size": 16,
+          "epochs": 1,
+          "patience": 1
+        }
+      ]
+    },
+    {
+      "manifest_sha256": "54363c0c6891f3e8dd80d840d080f8e3659dfb172fd72a13b2b3b0e20769c22c",
+      "configurations": [
+        {
+          "architecture": "efficientnet_b0",
+          "fine_tuning": "partial",
+          "lr": 0.0003,
+          "batch_size": 16,
+          "epochs": 1,
+          "patience": 1
+        }
+      ],
+      "training_source_sha256": {
+        "dataset.py": "645e39eb3ae93ce909f7a3c57a5ade0832afbe70d67e3c284a0a5323a2198ea4",
+        "models.py": "977f0eca0d6208eef41fa233ee85517b008fd9b1fac869a552f53ed2247bf323",
+        "train_fold.py": "496f968884c7114229ef5c3cf2cf93960ad694a42bff54bf8a1d8763f4410513"
+      },
+      "python_version": "3.14.7"
+    }
+  ],
+  "folds": [
+    {
+      "0": 0.3938064084451874,
+      "1": 0.13539596536331505,
+      "2": 0.5163603673795083,
+      "3": 0.35950929432086987,
+      "4": 0.4502762929966325
+    },
+    {
+      "0": 0.5005574799148413,
+      "1": 0.39621822703405596,
+      "2": 0.872221311500247,
+      "3": 0.8893129399708045,
+      "4": 0.692750158172391
+    }
+  ],
+  "runtime": [
+    {
+      "fold": 0,
+      "seed": 42,
+      "architecture": "efficientnet_b0",
+      "fine_tuning": "frozen",
+      "epochs": 1,
+      "patience": 1,
+      "batch_size": 16,
+      "lr": 0.0003,
+      "weight_decay": 0.0001,
+      "weighted": false,
+      "random_init": false,
+      "cpu": false,
+      "device": "cuda",
+      "torch_version": "2.15.0+cu132",
+      "torchvision_version": "0.29.2+cu132",
+      "sklearn_version": "1.9.1",
+      "python_version": "3.14.7",
+      "cuda_version": "13.2",
+      "manifest_sha256": "54363c0c6891f3e8dd80d840d080f8e3659dfb172fd72a13b2b3b0e20769c22c",
+      "transforms": "resize 224x224; training horizontal flip; ImageNet normalization",
+      "pretrained_weights_url": "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth",
+      "pretrained_weights_sha256": "7f5810bc96def8f7552d5b7e68d53c4786f81167d28291b21c0d90e1fca14934"
+    },
+    {
+      "fold": 0,
+      "seed": 42,
+      "architecture": "efficientnet_b0",
+      "fine_tuning": "partial",
+      "epochs": 1,
+      "patience": 1,
+      "batch_size": 16,
+      "lr": 0.0003,
+      "weight_decay": 0.0001,
+      "weighted": false,
+      "random_init": false,
+      "cpu": false,
+      "device": "cuda",
+      "torch_version": "2.15.0+cu132",
+      "torchvision_version": "0.29.2+cu132",
+      "sklearn_version": "1.9.1",
+      "python_version": "3.14.7",
+      "cuda_version": "13.2",
+      "manifest_sha256": "54363c0c6891f3e8dd80d840d080f8e3659dfb172fd72a13b2b3b0e20769c22c",
+      "transforms": "resize 224x224; training horizontal flip; ImageNet normalization",
+      "pretrained_weights_url": "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth",
+      "pretrained_weights_sha256": "7f5810bc96def8f7552d5b7e68d53c4786f81167d28291b21c0d90e1fca14934"
+    }
+  ],
+  "mean_paired_difference": 0.29914235761736535
+}
