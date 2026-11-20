@@ -23,12 +23,12 @@ class ThresholdTests(unittest.TestCase):
                         writer.writerow(dict(path=path, label=label, group=path, partition="development", cv_fold=fold))
             manifest_hash = hashlib.sha256(manifest.read_bytes()).hexdigest()
             (root / "search.json").write_text(json.dumps({"manifest_sha256": manifest_hash, "configurations": [{}]}))
-            (root / "fold_results.json").write_text(json.dumps([{"trial": 0, "fold": fold, "status": "complete", "best_validation_average_precision": 0.5} for fold in range(5)]))
+            (root / "fold_results.json").write_text(json.dumps([{"trial": 0, "fold": fold, "status": "complete", "best_validation_average_precision": 1.0} for fold in range(5)]))
             for fold in range(5):
-                (trial / f"fold_{fold}_status.json").write_text('{"status": "complete", "best_validation_average_precision": 0.5}')
+                (trial / f"fold_{fold}_status.json").write_text('{"status": "complete", "best_validation_average_precision": 1.0}')
                 folder = trial / f"fold_{fold}"; folder.mkdir()
                 (folder / "config.json").write_text(json.dumps({"manifest_sha256": manifest_hash, "fold": fold}))
-                (folder / "epochs.csv").write_text("validation_average_precision\n0.5\n")
+                (folder / "epochs.csv").write_text("validation_average_precision\n1.0\n")
                 (folder / "best.pt").write_bytes(b"checkpoint")
                 with (folder / "validation_predictions.csv").open("w", encoding="utf-8", newline="") as f:
                     writer = csv.DictWriter(f, fieldnames=["path", "label", "score", "group"]); writer.writeheader()

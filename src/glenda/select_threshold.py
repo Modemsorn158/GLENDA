@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 import numpy as np
-from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import average_precision_score, precision_recall_curve
 
 
 def select(manifest: Path, trial: Path, output: Path) -> dict:
@@ -40,6 +40,7 @@ def select(manifest: Path, trial: Path, output: Path) -> dict:
             raise ValueError("Fold configuration does not match the selected trial")
         prediction_file = trial / f"fold_{fold}" / "validation_predictions.csv"
         prediction_hashes.append(hashlib.sha256(prediction_file.read_bytes()).hexdigest())
+        fold_labels, fold_scores = [], []
         with prediction_file.open(encoding="utf-8", newline="") as f:
             for row in csv.DictReader(f):
                 path = row["path"]
@@ -49,6 +50,11 @@ def select(manifest: Path, trial: Path, output: Path) -> dict:
                 if expected["cv_fold"] != str(fold) or row["label"] != expected["label"] or row["group"] != expected["group"]:
                     raise ValueError("Prediction does not match manifest fold, label or group")
                 predictions[path] = row
+                fold_labels.append(int(row["label"])); fold_scores.append(float(row["score"]))
+        if set(fold_labels) != {0, 1} or not np.isfinite(fold_scores).all() or any(not 0 <= score <= 1 for score in fold_scores):
+            raise ValueError("Fold predictions must contain both classes and finite probability scores")
+        if not np.isclose(average_precision_score(fold_labels, fold_scores), status["best_validation_average_precision"], rtol=0, atol=1e-12):
+            raise ValueError("Fold predictions do not reproduce recorded average precision")
     if set(predictions) != set(development):
         raise ValueError("Predictions must cover the development set exactly once")
     labels = np.asarray([int(row["label"]) for row in predictions.values()])

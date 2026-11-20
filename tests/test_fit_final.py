@@ -38,12 +38,12 @@ class FinalFitTests(unittest.TestCase):
                       "weight_decay": 0.0, "batch_size": 2, "seed": 42, "weighted": False,
                       "random_init": False, "cpu": True}
             (search / "search.json").write_text(json.dumps({"manifest_sha256": digest, "configurations": [chosen]}))
-            (search / "fold_results.json").write_text(json.dumps([{"trial": 0, "fold": fold, "status": "complete", "best_validation_average_precision": 0.9} for fold in range(5)]))
+            (search / "fold_results.json").write_text(json.dumps([{"trial": 0, "fold": fold, "status": "complete", "best_validation_average_precision": 1.0} for fold in range(5)]))
             for fold in range(5):
-                (trial / f"fold_{fold}_status.json").write_text('{"status":"complete", "best_validation_average_precision":0.9}')
+                (trial / f"fold_{fold}_status.json").write_text('{"status":"complete", "best_validation_average_precision":1.0}')
                 folder = trial / f"fold_{fold}"; folder.mkdir()
                 (folder / "config.json").write_text(json.dumps({**chosen, "manifest_sha256": digest, "fold": fold, "pretrained_weights_sha256": weights_hash}))
-                (folder / "epochs.csv").write_text("epoch,validation_average_precision\n1,0.9\n", encoding="utf-8")
+                (folder / "epochs.csv").write_text("epoch,validation_average_precision\n1,1.0\n", encoding="utf-8")
                 (folder / "best.pt").write_bytes(b"checkpoint")
                 with (folder / "validation_predictions.csv").open("w", encoding="utf-8", newline="") as f:
                     writer = csv.DictWriter(f, fieldnames=["path", "label", "score", "group"]); writer.writeheader()
