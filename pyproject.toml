@@ -10,6 +10,7 @@ dependencies = ["Pillow>=10,<14", "numpy>=1.26", "scikit-learn>=1.5", "matplotli
 
 [project.optional-dependencies]
 training = ["torch>=2.6", "torchvision>=0.21"]
+demo = ["gradio>=5,<7"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
