@@ -1,0 +1,4 @@
+[
+  {"architecture": "efficientnet_b0", "fine_tuning": "frozen", "lr": 0.0003, "batch_size": 16, "epochs": 3, "patience": 2, "weighted": true},
+  {"architecture": "efficientnet_b0", "fine_tuning": "partial", "lr": 0.0001, "batch_size": 16, "epochs": 3, "patience": 2, "weighted": true}
+]
