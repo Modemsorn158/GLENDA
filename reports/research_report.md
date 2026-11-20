@@ -1,4 +1,4 @@
-# Tuning EfficientNet-B0 for binary classification on GLENDA: interim research report
+# Tuning EfficientNet-B0 for binary classification on GLENDA: internal research report
 
 **Status:** The bounded internal study and its one-time holdout evaluation are complete. External validation and clinical validation have not been performed.
 
