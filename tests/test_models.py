@@ -9,6 +9,8 @@ import torch
 from glenda.dataset import DevelopmentDataset
 from glenda.models import build_model, set_training_mode
 from glenda.train_fold import train
+from glenda.inference import load_final, predict_image
+from PIL import Image
 
 
 class ModelTests(unittest.TestCase):
@@ -36,6 +38,16 @@ class ModelTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             with self.assertRaises(ValueError):
                 train(SimpleNamespace(raw=Path(temp), output=Path(temp) / "output"))
+
+    def test_final_checkpoint_round_trip(self):
+        with tempfile.TemporaryDirectory() as temp:
+            model = build_model("efficientnet_b0", "frozen", pretrained=False)
+            path = Path(temp) / "final.pt"
+            torch.save({"state_dict": model.state_dict(), "config": {"architecture": "efficientnet_b0", "fine_tuning": "frozen", "threshold": 0.5}}, path)
+            loaded, config = load_final(path, torch.device("cpu"))
+            score = predict_image(loaded, Image.new("RGB", (24, 24), "gray"), torch.device("cpu"))
+            self.assertTrue(0 <= score <= 1)
+            self.assertEqual(config["threshold"], 0.5)
 
 
 if __name__ == "__main__":
