@@ -1,0 +1,18 @@
+{
+  "manifest_sha256": "5dd806f19796402b87087e4d625c2962cc69fd8ae24ff09e4f223936d5a6c7c2",
+  "checkpoint_sha256": "fbcfebbd76c95fd260cd46813eb62c30a1741619b219ac56f0d382a0c45f84ce",
+  "predictions_sha256": "b6829bfaf31435b18ef5f8ebedf7cee6b9721ac1d39b4d9e1ec6ac012263fec5",
+  "development_prevalence": 0.026973207820419984,
+  "constant_prevalence_brier": 0.026407618662142023,
+  "model_brier": 0.4792579171042634,
+  "score_quantiles": {
+    "0.25": 0.3606555014848709,
+    "0.5": 0.7084603309631348,
+    "0.75": 0.9523780047893524,
+    "0.99": 0.9999564528465271
+  },
+  "false_negative_groups": 20,
+  "largest_false_negative_group": 7,
+  "false_negative_frames": 55,
+  "negative_group_count": 3
+}

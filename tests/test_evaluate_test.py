@@ -9,6 +9,7 @@ from PIL import Image
 
 from glenda.evaluate_test import evaluate
 from glenda.summarize_test import summarize
+from glenda.summarize_error_analysis import summarize as summarize_error_analysis
 
 
 class TestEvaluationTests(unittest.TestCase):
@@ -50,6 +51,8 @@ class TestEvaluationTests(unittest.TestCase):
             self.assertFalse((root / "second").exists())
             summarize(root / "result", root / "ledger", root / "report.md")
             self.assertIn("Locked holdout evaluation", (root / "report.md").read_text(encoding="utf-8"))
+            summarize_error_analysis(root / "result", root / "ledger", manifest, root / "error_report.md")
+            self.assertIn("2 observed false-positive frames", (root / "error_report.md").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

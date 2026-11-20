@@ -11,8 +11,8 @@ class DemoTests(unittest.TestCase):
         with patch("glenda.demo.predict_image", return_value=0.7):
             label, score, threshold = classify(None, {"threshold": 0.6}, Image.new("RGB", (4, 4)), None)
         self.assertEqual(label, "Pathology-positive")
-        self.assertEqual(score, "0.7000")
-        self.assertEqual(threshold, "0.6000")
+        self.assertEqual(score, "0.70000000")
+        self.assertEqual(threshold, "0.60000000")
         self.assertEqual(classify(None, {}, None, None)[0], "Please provide an image.")
 
 

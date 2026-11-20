@@ -14,7 +14,7 @@ def classify(model, config, image, device):
     score = predict_image(model, image, device)
     threshold = float(config["threshold"])
     label = "Pathology-positive" if score >= threshold else "No visible pathology predicted"
-    return label, f"{score:.4f}", f"{threshold:.4f}"
+    return label, f"{score:.8f}", f"{threshold:.8f}"
 
 
 def main():

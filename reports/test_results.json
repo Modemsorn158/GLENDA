@@ -1,0 +1,95 @@
+{
+  "point": {
+    "n": 2763,
+    "prevalence": 0.02714440825190011,
+    "threshold": 0.9999728202819824,
+    "tp": 20,
+    "fp": 0,
+    "tn": 2688,
+    "fn": 55,
+    "accuracy": 0.9800941006152732,
+    "precision": 1.0,
+    "recall": 0.26666666666666666,
+    "specificity": 1.0,
+    "balanced_accuracy": 0.6333333333333333,
+    "f1": 0.42105263157894735,
+    "roc_auc": 0.9506150793650794,
+    "average_precision": 0.6572983153401872,
+    "brier": 0.4792579171042634
+  },
+  "intervals": {
+    "accuracy": {
+      "lower": 0.27163169868554093,
+      "upper": 0.9939999715637362,
+      "valid_replicates": 1000
+    },
+    "balanced_accuracy": {
+      "lower": 0.5655547965998785,
+      "upper": 0.7,
+      "valid_replicates": 960
+    },
+    "precision": {
+      "lower": 1.0,
+      "upper": 1.0,
+      "valid_replicates": 1000
+    },
+    "recall": {
+      "lower": 0.1315681622088007,
+      "upper": 0.4,
+      "valid_replicates": 1000
+    },
+    "specificity": {
+      "lower": 1.0,
+      "upper": 1.0,
+      "valid_replicates": 960
+    },
+    "f1": {
+      "lower": 0.23254128749578698,
+      "upper": 0.5714285714285714,
+      "valid_replicates": 1000
+    },
+    "roc_auc": {
+      "lower": 0.9238247728218467,
+      "upper": 1.0,
+      "valid_replicates": 960
+    },
+    "average_precision": {
+      "lower": 0.4485202251429203,
+      "upper": 0.9999999999999999,
+      "valid_replicates": 960
+    },
+    "brier": {
+      "lower": 0.004692458471887323,
+      "upper": 0.5141987121565729,
+      "valid_replicates": 1000
+    }
+  },
+  "requested_replicates": 1000,
+  "seed": 42,
+  "provenance": {
+    "manifest_sha256": "5dd806f19796402b87087e4d625c2962cc69fd8ae24ff09e4f223936d5a6c7c2",
+    "holdout_sha256": "67c90737b7eb42800f47f5556843e1b483c3077cd53dae325806a05b8d4f65bf",
+    "checkpoint_sha256": "fbcfebbd76c95fd260cd46813eb62c30a1741619b219ac56f0d382a0c45f84ce",
+    "evaluation_source_sha256": {
+      "evaluate_test.py": "d0eeb3be7a50b336c6311fcfd057f282d869eba12c9780efee65c7e4be93e2fa",
+      "evaluation.py": "eae949211f965f85fdd85b870ad2f68b673ecbdafbc678358222230bdfaaffac",
+      "inference.py": "59203f6911f5fbd0f9afc9aa5ed7c3ea860720a0de4513701a7036b3620edbf6",
+      "dataset.py": "645e39eb3ae93ce909f7a3c57a5ade0832afbe70d67e3c284a0a5323a2198ea4",
+      "models.py": "977f0eca0d6208eef41fa233ee85517b008fd9b1fac869a552f53ed2247bf323"
+    },
+    "device": "cuda",
+    "torch_version": "2.15.0+cu132",
+    "numpy_version": "2.5.5",
+    "matplotlib_version": "3.11.2",
+    "python_version": "3.14.7",
+    "known_groups": 22,
+    "groups_with_negative_frames": 3
+  },
+  "illustration_per_1000_at_release_frame_prevalence": {
+    "prevalence": 0.02700745782347404,
+    "false_positives": 0.0,
+    "false_negatives": 19.80546907054763,
+    "note": "Applies held-out sensitivity and specificity to curated release-frame prevalence; not a clinical forecast.",
+    "precision": 1.0
+  }
+}
