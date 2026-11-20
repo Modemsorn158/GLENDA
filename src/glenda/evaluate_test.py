@@ -6,6 +6,7 @@ import csv
 import hashlib
 import json
 import os
+import platform
 from collections import defaultdict
 from pathlib import Path
 
@@ -51,11 +52,17 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
         raise ValueError("Held-out split needs at least two independent groups for bootstrap")
     heldout_paths = sorted(row["path"] for row in rows)
     heldout_digest = hashlib.sha256(json.dumps(heldout_paths, separators=(",", ":")).encode("utf-8")).hexdigest()
+    source_dir = Path(__file__).parent
+    source_hashes = {name: hashlib.sha256((source_dir / name).read_bytes()).hexdigest()
+                     for name in ("evaluate_test.py", "evaluation.py", "inference.py", "dataset.py", "models.py")}
+    checkpoint_digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+    audit = {"manifest_sha256": digest, "holdout_sha256": heldout_digest, "checkpoint_sha256": checkpoint_digest,
+             "evaluation_source_sha256": source_hashes, "device": str(device), "torch_version": str(torch.__version__),
+             "numpy_version": np.__version__, "matplotlib_version": matplotlib.__version__, "python_version": platform.python_version()}
     ledger.mkdir(parents=True, exist_ok=True)
     lock = ledger / f"{heldout_digest}.json"
     with lock.open("x", encoding="utf-8") as f:
-        json.dump({"manifest_sha256": digest, "holdout_sha256": heldout_digest, "checkpoint_sha256": hashlib.sha256(checkpoint.read_bytes()).hexdigest(),
-                   "output": str(output), "threshold": config["threshold"], "status": "started"}, f, indent=2)
+        json.dump({**audit, "output": str(output), "threshold": config["threshold"], "status": "started"}, f, indent=2)
     # An interrupted evaluation remains locked and requires documented investigation.
     output.mkdir(parents=True)
     predictions = []
@@ -71,7 +78,7 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
     labels = np.asarray([p["label"] for p in predictions]); scores = np.asarray([p["score"] for p in predictions])
     groups = [p["group"] for p in predictions]; threshold = float(config["threshold"])
     result = cluster_bootstrap(labels, scores, groups, threshold, samples=bootstrap)
-    result["provenance"] = {"manifest_sha256": digest, "holdout_sha256": heldout_digest, "checkpoint_sha256": hashlib.sha256(checkpoint.read_bytes()).hexdigest(),
+    result["provenance"] = {**audit,
                             "known_groups": len(set(groups)), "groups_with_negative_frames": len({groups[i] for i in range(len(groups)) if labels[i] == 0})}
     result["fixed_threshold_sensitivity"] = [metrics(labels, scores, t) for t in (0.1, 0.25, 0.5, 0.75, 0.9)]
     group_array = np.asarray(groups)
@@ -139,8 +146,7 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
     axes[3].axvline(threshold, linestyle="--", color="gray", label="Fixed threshold")
     axes[3].set(xlabel="Threshold", ylabel="Metric", title="Threshold sensitivity", ylim=(0, 1)); axes[3].legend()
     fig.tight_layout(); fig.savefig(output / "evaluation.png", dpi=150); plt.close(fig)
-    lock.write_text(json.dumps({"manifest_sha256": digest, "holdout_sha256": heldout_digest, "checkpoint_sha256": hashlib.sha256(checkpoint.read_bytes()).hexdigest(),
-                                "output": str(output), "threshold": threshold, "status": "complete"}, indent=2), encoding="utf-8")
+    lock.write_text(json.dumps({**audit, "output": str(output), "threshold": threshold, "status": "complete"}, indent=2), encoding="utf-8")
 
 
 def main():
