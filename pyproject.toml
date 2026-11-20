@@ -8,5 +8,8 @@ version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = ["Pillow>=10,<14", "numpy>=1.26", "scikit-learn>=1.5"]
 
+[project.optional-dependencies]
+training = ["torch>=2.6", "torchvision>=0.21"]
+
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -1,0 +1,42 @@
+import csv
+import tempfile
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+
+import torch
+
+from glenda.dataset import DevelopmentDataset
+from glenda.models import build_model, set_training_mode
+from glenda.train_fold import train
+
+
+class ModelTests(unittest.TestCase):
+    def test_frozen_efficientnet_forward_and_batchnorm(self):
+        model = build_model("efficientnet_b0", "frozen", pretrained=False)
+        set_training_mode(model)
+        self.assertTrue(all(not p.requires_grad for p in model.features.parameters()))
+        self.assertTrue(all(p.requires_grad for p in model.classifier.parameters()))
+        self.assertTrue(all(not m.training for m in model.features.modules() if isinstance(m, torch.nn.BatchNorm2d)))
+        with torch.no_grad():
+            self.assertEqual(tuple(model(torch.zeros(2, 3, 64, 64)).shape), (2, 1))
+
+    def test_manifest_group_crossing_rejected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "manifest.csv"
+            with path.open("w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=["path", "label", "group", "partition", "cv_fold"])
+                writer.writeheader()
+                writer.writerow(dict(path="a", label=0, group="same", partition="development", cv_fold=0))
+                writer.writerow(dict(path="b", label=1, group="same", partition="test", cv_fold=""))
+            with self.assertRaises(ValueError):
+                DevelopmentDataset(Path(temp), path, 0, True)
+
+    def test_training_cannot_write_into_raw_data(self):
+        with tempfile.TemporaryDirectory() as temp:
+            with self.assertRaises(ValueError):
+                train(SimpleNamespace(raw=Path(temp), output=Path(temp) / "output"))
+
+
+if __name__ == "__main__":
+    unittest.main()
