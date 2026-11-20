@@ -1,0 +1,123 @@
+{
+  "manifest_sha256": "5dd806f19796402b87087e4d625c2962cc69fd8ae24ff09e4f223936d5a6c7c2",
+  "selection_sha256": "af25b47cdf273119573de4b867aa06e1896aec43cda92170b3eeed3480b6ada9",
+  "original_pooled_threshold": 0.9999728202819824,
+  "folds": [
+    {
+      "held_out_fold": 0,
+      "threshold_from_other_folds": 0.9996999502182007,
+      "own_fold_f1_threshold": 0.9999995231628418,
+      "transferred_metrics": {
+        "n": 2401,
+        "prevalence": 0.024989587671803416,
+        "threshold": 0.9996999502182007,
+        "tp": 51,
+        "fp": 649,
+        "tn": 1692,
+        "fn": 9,
+        "accuracy": 0.7259475218658892,
+        "precision": 0.07285714285714286,
+        "recall": 0.85,
+        "specificity": 0.7227680478428022,
+        "balanced_accuracy": 0.786384023921401,
+        "f1": 0.13421052631578947,
+        "roc_auc": 0.8841841093549765,
+        "average_precision": 0.5347548228601903,
+        "brier": 0.7616710012486911
+      }
+    },
+    {
+      "held_out_fold": 1,
+      "threshold_from_other_folds": 0.9999731779098511,
+      "own_fold_f1_threshold": 0.9997804760932922,
+      "transferred_metrics": {
+        "n": 2789,
+        "prevalence": 0.021154535675869487,
+        "threshold": 0.9999731779098511,
+        "tp": 28,
+        "fp": 0,
+        "tn": 2730,
+        "fn": 31,
+        "accuracy": 0.9888849049838652,
+        "precision": 1.0,
+        "recall": 0.4745762711864407,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.7372881355932204,
+        "f1": 0.6436781609195402,
+        "roc_auc": 0.9723039672192215,
+        "average_precision": 0.8102482214923907,
+        "brier": 0.17544350239701262
+      }
+    },
+    {
+      "held_out_fold": 2,
+      "threshold_from_other_folds": 0.9999728202819824,
+      "own_fold_f1_threshold": 0.9996349811553955,
+      "transferred_metrics": {
+        "n": 1544,
+        "prevalence": 0.038860103626943004,
+        "threshold": 0.9999728202819824,
+        "tp": 25,
+        "fp": 0,
+        "tn": 1484,
+        "fn": 35,
+        "accuracy": 0.9773316062176166,
+        "precision": 1.0,
+        "recall": 0.4166666666666667,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.7083333333333334,
+        "f1": 0.5882352941176471,
+        "roc_auc": 0.9524820305480682,
+        "average_precision": 0.7488421282590119,
+        "brier": 0.38879995175473286
+      }
+    },
+    {
+      "held_out_fold": 3,
+      "threshold_from_other_folds": 0.9999728202819824,
+      "own_fold_f1_threshold": 0.9935528039932251,
+      "transferred_metrics": {
+        "n": 1881,
+        "prevalence": 0.03189792663476874,
+        "threshold": 0.9999728202819824,
+        "tp": 22,
+        "fp": 5,
+        "tn": 1816,
+        "fn": 38,
+        "accuracy": 0.9771398192450824,
+        "precision": 0.8148148148148148,
+        "recall": 0.36666666666666664,
+        "specificity": 0.9972542559033498,
+        "balanced_accuracy": 0.6819604612850082,
+        "f1": 0.5057471264367817,
+        "roc_auc": 0.9816401244737324,
+        "average_precision": 0.6828999955150937,
+        "brier": 0.15795409174008818
+      }
+    },
+    {
+      "held_out_fold": 4,
+      "threshold_from_other_folds": 0.9999912977218628,
+      "own_fold_f1_threshold": 0.9993244409561157,
+      "transferred_metrics": {
+        "n": 2433,
+        "prevalence": 0.02424989724619811,
+        "threshold": 0.9999912977218628,
+        "tp": 6,
+        "fp": 0,
+        "tn": 2374,
+        "fn": 53,
+        "accuracy": 0.9782161939991779,
+        "precision": 1.0,
+        "recall": 0.1016949152542373,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.5508474576271186,
+        "f1": 0.18461538461538463,
+        "roc_auc": 0.9861065497693944,
+        "average_precision": 0.8880512983258156,
+        "brier": 0.3379480088276569
+      }
+    }
+  ],
+  "warning": "Exploratory development-only diagnostic; candidate selection used all folds, and models producing the other-fold scores were trained on the target fold. It is not a nested estimate, final-refit calibration, or an independent evaluation."
+}

@@ -4,6 +4,7 @@ Frames: 2763; positive-frame fraction: 0.0271; fixed threshold: 0.99997282.
 Known linked groups: 22; groups containing negative frames: 3.
 
 Confusion counts: TP 20, FP 0, TN 2688, FN 55.
+An always-negative classifier would have accuracy 0.9729 and sensitivity 0 on this holdout.
 
 | Metric | Estimate | Cluster bootstrap 95% interval | Valid replicates |
 |---|---:|---:|---:|

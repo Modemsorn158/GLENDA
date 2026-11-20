@@ -26,7 +26,8 @@ def summarize(test: Path, ledger: Path, output: Path) -> None:
             ("roc_auc", "ROC-AUC"), ("average_precision", "Average precision"), ("brier", "Brier score")]
     lines = ["# Locked holdout evaluation", "", f"Frames: {point['n']}; positive-frame fraction: {point['prevalence']:.4f}; fixed threshold: {point['threshold']:.8f}.",
              f"Known linked groups: {provenance['known_groups']}; groups containing negative frames: {provenance['groups_with_negative_frames']}.", "",
-             f"Confusion counts: TP {point['tp']}, FP {point['fp']}, TN {point['tn']}, FN {point['fn']}.", "",
+             f"Confusion counts: TP {point['tp']}, FP {point['fp']}, TN {point['tn']}, FN {point['fn']}.",
+             f"An always-negative classifier would have accuracy {(point['tn'] + point['fp']) / point['n']:.4f} and sensitivity 0 on this holdout.", "",
              "| Metric | Estimate | Cluster bootstrap 95% interval | Valid replicates |", "|---|---:|---:|---:|"]
     for key, label in keys:
         interval = intervals[key]
