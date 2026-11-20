@@ -1,5 +1,6 @@
 """Generate a report from complete development tuning and frozen selection."""
 import argparse
+import csv
 import hashlib
 import json
 from pathlib import Path
@@ -17,12 +18,15 @@ def summarize(search: Path, output: Path) -> None:
              "The candidates were chosen after the feasibility experiments and evaluated on the same development folds. "
              "The table is selection data, not an unbiased performance estimate. Both learning rate and fine-tuning depth differ.", "",
              "| Trial | Fine-tuning | Learning rate | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean AP | SD |", "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
-    results = []
+    results, epoch_rows = [], []
     for trial, config in enumerate(identity["configurations"]):
         rows = sorted((r for r in folds if r["trial"] == trial), key=lambda row: row["fold"])
         if len(rows) != 5 or [r["fold"] for r in rows] != list(range(5)) or any(r["status"] != "complete" for r in rows):
             raise ValueError("Every trial must have five completed folds")
         scores = [float(r["best_validation_average_precision"]) for r in rows]
+        for fold in range(5):
+            with (search / f"trial_{trial:03d}/fold_{fold}/epochs.csv").open(encoding="utf-8", newline="") as f:
+                epoch_rows.extend({"trial": trial, "fold": fold, **row} for row in csv.DictReader(f))
         mean, sd = float(np.mean(scores)), float(np.std(scores, ddof=1))
         lines.append(f"| {trial} | {config['fine_tuning']} | {config['lr']:.4g} | " + " | ".join(f"{s:.4f}" for s in scores) + f" | {mean:.4f} | {sd:.4f} |")
         results.append({"trial": trial, "scores": scores, "mean": mean, "sample_sd": sd})
@@ -33,6 +37,9 @@ def summarize(search: Path, output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("\n".join(lines), encoding="utf-8")
     output.with_suffix(".json").write_text(json.dumps({"identity": identity, "selection": selected, "results": results}, indent=2), encoding="utf-8")
+    with output.with_suffix(".epochs.csv").open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["trial", "fold", "epoch", "training_loss", "validation_average_precision"])
+        writer.writeheader(); writer.writerows(epoch_rows)
 
 
 def main():

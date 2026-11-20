@@ -38,7 +38,7 @@ The [generated feasibility table](feasibility_results.md) reports each unweighte
 
 ## Discussion
 
-The original report describes an undersampled 114-frame test set with a 1:2 class ratio; this does not preserve the release's frame distribution, and 114 is not 10% of 13,811. Its reported scores and explanations remain historical claims rather than verified results of the rebuild. The new protocol protects known sources and duplicates across folds and preserves the held-out frames, but it cannot eliminate unobserved patient overlap. AUC, calibration and uncertainty are planned for the selected final model; the test set must not guide threshold or model changes.
+The original report describes an undersampled 114-frame test set with a 1:2 class ratio; this does not preserve the release's frame distribution, and 114 is not 10% of 13,811. Its page 10 table evaluates both an earlier image-level-validation script and a later video-grouped-validation script on the same test set, despite a single-evaluation description elsewhere. This test reuse and the absence of executable training scripts in the preserved repository limit interpretation of the reported comparison. Its reported scores and explanations remain historical claims rather than verified results of the rebuild. The new protocol protects known sources and duplicates across folds and preserves the held-out frames, but it cannot eliminate unobserved patient overlap. AUC, calibration and uncertainty are planned for the selected final model; the test set must not guide threshold or model changes.
 
 ## Limitations
 
