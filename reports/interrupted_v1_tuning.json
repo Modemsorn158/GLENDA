@@ -1,0 +1,53 @@
+{
+  "reason": "Stopped after discovering that one v1 validation fold had only one known negative-containing group; development folds were rebalanced without changing held-out rows.",
+  "status": "interrupted; not used for candidate selection",
+  "completed_folds": [
+    {
+      "trial": 0,
+      "fold": 0,
+      "status": "complete",
+      "best_validation_average_precision": 0.4465422458622569
+    },
+    {
+      "trial": 0,
+      "fold": 1,
+      "status": "complete",
+      "best_validation_average_precision": 0.33000863097214844
+    },
+    {
+      "trial": 0,
+      "fold": 2,
+      "status": "complete",
+      "best_validation_average_precision": 0.7813084010503476
+    }
+  ],
+  "search": {
+    "manifest_sha256": "54363c0c6891f3e8dd80d840d080f8e3659dfb172fd72a13b2b3b0e20769c22c",
+    "configurations": [
+      {
+        "architecture": "efficientnet_b0",
+        "fine_tuning": "frozen",
+        "lr": 0.0003,
+        "batch_size": 16,
+        "epochs": 3,
+        "patience": 2,
+        "weighted": true
+      },
+      {
+        "architecture": "efficientnet_b0",
+        "fine_tuning": "partial",
+        "lr": 0.0001,
+        "batch_size": 16,
+        "epochs": 3,
+        "patience": 2,
+        "weighted": true
+      }
+    ],
+    "training_source_sha256": {
+      "dataset.py": "645e39eb3ae93ce909f7a3c57a5ade0832afbe70d67e3c284a0a5323a2198ea4",
+      "models.py": "977f0eca0d6208eef41fa233ee85517b008fd9b1fac869a552f53ed2247bf323",
+      "train_fold.py": "496f968884c7114229ef5c3cf2cf93960ad694a42bff54bf8a1d8763f4410513"
+    },
+    "python_version": "3.14.7"
+  }
+}

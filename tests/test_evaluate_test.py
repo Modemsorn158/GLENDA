@@ -33,6 +33,13 @@ class TestEvaluationTests(unittest.TestCase):
                 evaluate(raw, manifest, checkpoint, root / "result", root / "ledger", bootstrap=10)
                 with self.assertRaises(FileExistsError):
                     evaluate(raw, manifest, checkpoint, root / "second", root / "ledger", bootstrap=10)
+                revised = root / "revised.csv"
+                updated = [dict(row, cv_fold=(1 if row["cv_fold"] == 0 and row["partition"] == "development" else row["cv_fold"])) for row in rows]
+                with revised.open("w", encoding="utf-8", newline="") as f:
+                    writer = csv.DictWriter(f, fieldnames=rows[0].keys()); writer.writeheader(); writer.writerows(updated)
+                config["manifest_sha256"] = hashlib.sha256(revised.read_bytes()).hexdigest()
+                with self.assertRaises(FileExistsError):
+                    evaluate(raw, revised, checkpoint, root / "third", root / "ledger", bootstrap=10)
             self.assertTrue((root / "result/metrics.json").exists())
             self.assertTrue((root / "result/evaluation.png").exists())
             self.assertTrue((root / "result/group_errors.csv").exists())

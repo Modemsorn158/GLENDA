@@ -7,7 +7,7 @@ from pathlib import Path
 def summarize(test: Path, ledger: Path, output: Path) -> None:
     data = json.loads((test / "metrics.json").read_text(encoding="utf-8"))
     provenance = data["provenance"]
-    lock = json.loads((ledger / f"{provenance['manifest_sha256']}.json").read_text(encoding="utf-8"))
+    lock = json.loads((ledger / f"{provenance['holdout_sha256']}.json").read_text(encoding="utf-8"))
     if lock["status"] != "complete" or lock["checkpoint_sha256"] != provenance["checkpoint_sha256"] or Path(lock["output"]).resolve() != test.resolve():
         raise ValueError("Completed test ledger does not match results")
     point, intervals = data["point"], data["intervals"]
@@ -24,6 +24,10 @@ def summarize(test: Path, ledger: Path, output: Path) -> None:
         interval = intervals[key]
         bounds = f"{fmt(interval['lower'])}–{fmt(interval['upper'])}" if interval["lower"] is not None else "undefined"
         lines.append(f"| {label} | {fmt(point[key])} | {bounds} | {interval['valid_replicates']} |")
+    default = next(item for item in data["fixed_threshold_sensitivity"] if item["threshold"] == 0.5)
+    lines.extend(["", "| Fixed operating point | Precision | Recall | Specificity | F1 |", "|---|---:|---:|---:|---:|",
+                  f"| Development-selected ({point['threshold']:.4f}) | {fmt(point['precision'])} | {fmt(point['recall'])} | {fmt(point['specificity'])} | {fmt(point['f1'])} |",
+                  f"| 0.5 reference | {fmt(default['precision'])} | {fmt(default['recall'])} | {fmt(default['specificity'])} | {fmt(default['f1'])} |"])
     illustration = data["illustration_per_1000_at_release_frame_prevalence"]
     lines.extend(["", f"At the curated release-frame prevalence of {illustration['prevalence']:.4f}, applying these held-out rates gives an illustrative {illustration['false_positives']:.1f} false positives and {illustration['false_negatives']:.1f} false negatives per 1,000 frames, and precision {fmt(illustration['precision'])}. This is not a clinical forecast.", "",
                   "| Excluded negative-containing group | Remaining specificity | Remaining sensitivity |", "|---|---:|---:|"])

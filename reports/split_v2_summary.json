@@ -1,0 +1,75 @@
+{
+  "seed": 43,
+  "method": "greedy balance of negative-group counts, negative frames, then positive frames",
+  "parent_manifest_sha256": "54363c0c6891f3e8dd80d840d080f8e3659dfb172fd72a13b2b3b0e20769c22c",
+  "holdout_unchanged": true,
+  "counts": {
+    "development": {
+      "1": 298,
+      "0": 10750
+    },
+    "test": {
+      "1": 75,
+      "0": 2688
+    }
+  },
+  "group_counts": {
+    "development": {
+      "all": 90,
+      "with_positive": 80,
+      "with_negative": 14
+    },
+    "test": {
+      "all": 22,
+      "with_positive": 21,
+      "with_negative": 3
+    }
+  },
+  "validation_counts": {
+    "0": {
+      "1": 60,
+      "0": 2341
+    },
+    "1": {
+      "1": 59,
+      "0": 2730
+    },
+    "2": {
+      "1": 60,
+      "0": 1484
+    },
+    "3": {
+      "1": 60,
+      "0": 1821
+    },
+    "4": {
+      "1": 59,
+      "0": 2374
+    }
+  },
+  "validation_groups_by_label": {
+    "0": {
+      "0": 3,
+      "1": 17
+    },
+    "1": {
+      "0": 2,
+      "1": 15
+    },
+    "2": {
+      "0": 3,
+      "1": 15
+    },
+    "3": {
+      "0": 3,
+      "1": 17
+    },
+    "4": {
+      "0": 3,
+      "1": 16
+    }
+  },
+  "warning": "Known groups are not guaranteed to correspond to independent patients.",
+  "manifest_sha256": "5dd806f19796402b87087e4d625c2962cc69fd8ae24ff09e4f223936d5a6c7c2",
+  "holdout_sha256": "67c90737b7eb42800f47f5556843e1b483c3077cd53dae325806a05b8d4f65bf"
+}
