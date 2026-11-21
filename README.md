@@ -44,6 +44,6 @@ Many frames come from the same video or known case, so they are not as independe
 
 ## Can I try the project?
 
-The current checkout contains research code, reports and tests, but not the dataset or trained checkpoints needed to run the demonstration. Dataset image files were removed from the reachable main-branch history in a history rewrite; they were previously present in public history, and older clones or caches may still contain them. See the [history and rights review](reports/refreshed_audit_response.md). The [technical guide](docs/technical-guide.md) explains how to install dependencies, audit authorized data, run tests and set up a new study. The original test has already been used: do not reuse it to select a model, adjust a threshold or claim a fresh evaluation.
+The current checkout contains research code, reports and tests, but not the dataset or trained checkpoints needed to run the demonstration. The [technical guide](docs/technical-guide.md) explains how to install dependencies, audit authorized data, run tests and set up a new study. The original test has already been used: do not reuse it to select a model, adjust a threshold or claim a fresh evaluation.
 
 The project’s own software is available under the [MIT License](LICENSE). The [GLENDA dataset](https://ftp.itec.aau.at/datasets/GLENDA/) has separate non-commercial scientific research and attribution requirements, and third-party pretrained weights have their own terms. The [study report](reports/study_explained.md) provides the dataset citation.

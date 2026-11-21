@@ -8,6 +8,8 @@ On 21 November 2026, the hosting service reported this repository as public. Bef
 
 The owner subsequently authorized rewriting the main-branch history to remove dataset image paths. This does not erase earlier clones, forks or caches, and no visibility change, deletion request to the host, notification or claim of complete erasure has been made. The [image-handling guidance](../docs/data_privacy.md) records this limitation.
 
+After the rewrite, a headers-only anonymous request to GitHub for one former image object returned HTTP 200. Therefore, removal from reachable main history did **not** immediately eliminate all public access to the old objects. The owner should ask GitHub Support whether cached/unreachable objects are eligible for removal and consult the data custodian. No image bytes were downloaded by this check.
+
 ## Changes in this update
 
 - **Future media checks:** `python scripts/check_tracked_media.py` checks the Git index, and CI runs it on the checked-out commit. It blocks selected media/archive/model extensions, several recognizable file signatures, oversized blobs and changed bytes at the two approved aggregate-figure paths. Tests use synthetic files. This is not a comprehensive privacy scan or protection against altered check code; it does not inspect or remove historical objects. Human review, access controls and custodian approval remain necessary.
