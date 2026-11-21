@@ -2,7 +2,7 @@
 
 The audit reviewed public source and reports without executing the private study. Its research conclusions remain important: the original model missed 55 of 75 positive holdout frames, patient independence is unknown, three known groups supplied the negative holdout frames, and no external validation has been performed. These changes do not improve those historical results or authorize reusing the consumed holdout.
 
-**Additional finding:** The current checkout omits the image dataset, but an ancestor of the current branch contains dataset images in Git history. This qualifies the audit's statement that no patient images are public: whether that historical content is accessible depends on the hosting permissions, but it remains reachable in repository history. The owner and data custodian should review repository visibility and the dataset's terms. This work did not rewrite history or change access.
+**Historical finding and subsequent action:** At the time of this audit response, an ancestor contained dataset images in public Git history. On 21 November 2026 the owner authorized a history rewrite to remove the dataset-image paths from reachable main history. Earlier clones or caches may still contain the files; rewriting history does not guarantee erasure. The owner and data custodian should review prior access, repository visibility and the dataset's terms. Repository visibility was not changed.
 
 ## Addressed in the current code
 
