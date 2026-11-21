@@ -1,0 +1,17 @@
+# Response to the refreshed November 2026 audit
+
+The refreshed audit reviewed public source without running the private study. This response starts from repository commit `421ce0b1266e41e19dcc65681881c7ff9335e5bc`. The main scientific limitations remain: the original model missed 55 of 75 annotated positive test frames, unknown patient links prevent a patient-independence claim, only three known groups supplied negative test frames, and no independent external validation has been completed. The consumed test must not be used to choose new models, thresholds or calibration.
+
+## Historical images require an owner decision
+
+On 21 November 2026, the hosting service reported this repository as public. A metadata-only check confirmed that commit `f6990a8d2144e0b0a4b795a79e3274f314998ae3` is an ancestor of the current branch and lists **14,184 image paths** under `data/raw`: 13,438 in the negative-frame directory, 373 in the positive-frame directory and 373 in the annotation directory. This is a count of paths in one historical snapshot; we did not open the images or establish their identifiability, ownership, permissions or the complete contents of every historical revision. Public repository history may make these objects available to others. The dataset owner and repository custodian should assess the applicable terms, prior access and appropriate response. No breach or legal conclusion is asserted here.
+
+No visibility changes, history rewrites, deletion requests, notifications or claims of erasure have been made. Such actions need a coordinated owner/custodian decision; past clones, forks and caches may persist even after a rewrite. The [image-handling guidance](../docs/data_privacy.md) records this limitation.
+
+## Changes in this update
+
+- **Future media checks:** `python scripts/check_tracked_media.py` checks the Git index, and CI runs it on the checked-out commit. It blocks selected media/archive/model extensions, several recognizable file signatures, oversized blobs and changed bytes at the two approved aggregate-figure paths. Tests use synthetic files. This is not a comprehensive privacy scan or protection against altered check code; it does not inspect or remove historical objects. Human review, access controls and custodian approval remain necessary.
+- **Inference contract:** version-2 checkpoints fingerprint the actual preprocessing function and validate the model metadata, threshold and single finite output. Missing or mismatched contracts fail by default; the explicit legacy option accepts a missing contract only. A synthetic golden preprocessing/logit test and conditional CPU/GPU score-parity test exercise the path. The function fingerprint does not attest to library versions, all transitive helpers, wheel integrity or hardware, and version-1 contracts without the fingerprint are not silently accepted.
+- **Annotation tests:** synthetic cases cover duplicate IDs, invalid references, malformed or out-of-bounds geometry, unsupported segmentation and non-finite area. Schema checks do not establish clinical label accuracy.
+
+The earlier [audit response](comprehensive_audit_response.md) records the grouping, result-hash, inventory and privacy improvements already made. Independent patient-linked cohorts, source-controlled studies, calibration/operating-point design, complete dependency/environment attestation, central ledger governance and an approved real-image retention policy remain open. These tasks cannot be established by rerunning the historical holdout.

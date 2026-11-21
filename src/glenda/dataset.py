@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import csv
+import hashlib
+import inspect
 from pathlib import Path
 
 from PIL import Image
@@ -14,7 +16,9 @@ STD = (0.229, 0.224, 0.225)
 
 def inference_contract():
     """Versioned description of the image and score semantics for new checkpoints."""
-    return {"version": 1, "color": "RGB", "orientation": "no_exif_transpose",
+    source = inspect.getsource(preprocessing).replace("\r\n", "\n").encode("utf-8")
+    return {"version": 2, "transform_source_sha256": hashlib.sha256(source).hexdigest(),
+            "color": "RGB", "orientation": "no_exif_transpose",
             "resize": [224, 224], "interpolation": "bilinear", "value_scale": "0_to_1",
             "mean": list(MEAN), "std": list(STD), "negative_label": 0, "positive_label": 1,
             "score": "uncalibrated_sigmoid", "threshold_space": "sigmoid"}

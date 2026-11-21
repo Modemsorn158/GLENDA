@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import torch
 
@@ -13,7 +14,26 @@ from glenda.inference import load_final, predict_image
 from PIL import Image
 
 
+def changed_preprocessing(training):
+    return None
+
+
 class ModelTests(unittest.TestCase):
+    def test_synthetic_golden_preprocessing_and_logit(self):
+        class Probe(torch.nn.Module):
+            def forward(self, x):
+                return (0.2 * x[:, 0, 0, 0] + 0.3 * x[:, 1, 112, 112] - 0.1 * x[:, 2, 223, 223] + 0.4).unsqueeze(1)
+        image = Image.new("RGB", (2, 2))
+        image.putdata([(0, 40, 80), (255, 100, 20), (30, 200, 60), (220, 250, 240)])
+        self.assertAlmostEqual(predict_image(Probe(), image, torch.device("cpu")), 0.47630763, delta=0.0005)
+        with self.assertRaisesRegex(ValueError, "one finite logit"):
+            predict_image(torch.nn.Identity(), image, torch.device("cpu"))
+        class Invalid(torch.nn.Module):
+            def forward(self, x):
+                return torch.tensor([float("nan")], device=x.device)
+        with self.assertRaisesRegex(ValueError, "one finite logit"):
+            predict_image(Invalid(), image, torch.device("cpu"))
+
     def test_frozen_efficientnet_forward_and_batchnorm(self):
         model = build_model("efficientnet_b0", "frozen", pretrained=False)
         set_training_mode(model)
@@ -78,6 +98,9 @@ class ModelTests(unittest.TestCase):
             score = predict_image(loaded, Image.new("RGB", (24, 24), "gray"), torch.device("cpu"))
             self.assertTrue(0 <= score <= 1)
             self.assertEqual(config["threshold"], 0.5)
+            with patch("glenda.dataset.preprocessing", changed_preprocessing):
+                with self.assertRaisesRegex(ValueError, "inference contract"):
+                    load_final(path, torch.device("cpu"))
             config["inference_contract"]["color"] = "BGR"
             torch.save({"state_dict": model.state_dict(), "config": config}, path)
             with self.assertRaisesRegex(ValueError, "inference contract"):
@@ -87,6 +110,10 @@ class ModelTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "Legacy checkpoint"):
                 load_final(path, torch.device("cpu"))
             load_final(path, torch.device("cpu"), allow_legacy=True)
+            config["threshold"] = float("nan")
+            torch.save({"state_dict": model.state_dict(), "config": config}, path)
+            with self.assertRaisesRegex(ValueError, "threshold"):
+                load_final(path, torch.device("cpu"), allow_legacy=True)
 
 
 if __name__ == "__main__":

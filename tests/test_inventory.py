@@ -36,8 +36,14 @@ class InventoryTests(unittest.TestCase):
                 "annotations": [{"id": 1, "image_id": 1, "category_id": 1, "bbox": [1, 1, 5, 5], "area": 25}]}
         self.assertEqual(validate_coco(base)["annotations"], 1)
         for mutate, message in ((lambda c: c["images"].append(dict(c["images"][0])), "duplicate"),
+                                (lambda c: c["annotations"].append(dict(c["annotations"][0])), "duplicate"),
                                 (lambda c: c["annotations"][0].update(image_id=99), "unknown"),
+                                (lambda c: c["annotations"][0].update(category_id=99), "unknown"),
                                 (lambda c: c["annotations"][0].update(bbox=[10, 1, 5, 5]), "bounds"),
+                                (lambda c: c["annotations"][0].update(bbox=[1, 1, -1, 5]), "bounds"),
+                                (lambda c: c["annotations"][0].update(segmentation=[[1, 1, 2]]), "polygon"),
+                                (lambda c: c["annotations"][0].update(segmentation=[[1, 1, 2, 2, 30, 4]]), "bounds"),
+                                (lambda c: c["annotations"][0].update(segmentation={"counts": []}), "Unsupported"),
                                 (lambda c: c["annotations"][0].update(area=float("nan")), "area")):
             value = json.loads(json.dumps(base)); mutate(value)
             with self.assertRaisesRegex(ValueError, message):
