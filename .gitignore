@@ -9,5 +9,7 @@ outputs/
 *.jpg
 *.jpeg
 *.png
+!reports/assets/composition.png
+!reports/assets/evaluation.png
 *.zip
 .env*

@@ -48,8 +48,13 @@ def build_model(architecture: str, fine_tuning: str, pretrained: bool = True) ->
 
 
 def set_training_mode(model: nn.Module) -> None:
-    """Avoid changing running statistics in frozen batch-normalization modules."""
+    """Disable training-time behavior in fully frozen parameterized subtrees."""
     model.train()
-    for module in model.modules():
-        if isinstance(module, nn.modules.batchnorm._BatchNorm) and not any(p.requires_grad for p in module.parameters()):
+    def freeze_mode(module):
+        parameters = list(module.parameters())
+        if parameters and not any(p.requires_grad for p in parameters):
             module.eval()
+            return
+        for child in module.children():
+            freeze_mode(child)
+    freeze_mode(model)

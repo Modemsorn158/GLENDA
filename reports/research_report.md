@@ -20,7 +20,7 @@ The supplied v1.5 files contain 13,811 JPEG frames, including 373 COCO-annotated
 
 The official release page lists 27 no-pathology cases [2], whereas the supplied negative paths expose 20 distinct video IDs. These are different units and, without case metadata, the reported case count cannot be independently reconciled with the available identifiers. The negative label describes the released counterexample sequences; it is not a histological confirmation for every frame. The 2.7% positive fraction describes this curated release, not an estimate of clinical prevalence. Five negative videos contribute 8,605 of 13,438 negative frames (64.0%), whereas the five largest positive videos contribute 34 of 373 annotated frames (9.1%). The generated `outputs/audit/composition.png` shows this source imbalance, a potential source shortcut and a reason frame-level uncertainty can be misleading.
 
-![Class and source-video composition](../outputs/audit/composition.png)
+![Class and source-video composition](assets/composition.png)
 
 ## Methodology
 
@@ -38,7 +38,7 @@ The [generated feasibility table](feasibility_results.md) reports each unweighte
 
 The [one-time holdout table](test_results.md) reports all classification metrics and cluster-bootstrap intervals. At the fixed development-selected threshold of 0.99997282, sensitivity was 0.2667, F1 was 0.4211, average precision was 0.6573 and ROC-AUC was 0.9506. The confusion counts were TP 20, FP 0, TN 2,688 and FN 55. At the predeclared 0.5 reference threshold, sensitivity was 1.0000 but there were 1,702 false-positive frames and precision was 0.0422; this is a descriptive sensitivity analysis, not a new operating point. The observed 0.9801 accuracy is dominated by the negative class. The [error analysis](error_analysis.md) reports a Brier score of 0.4793 versus 0.0264 for a constant score based on development prevalence; the reliability plot also shows substantial score miscalibration on this holdout. Brier score alone combines multiple components and does not isolate calibration. The 55 false-negative frames came from 20 known linked groups.
 
-![Held-out ROC, precision–recall, calibration and threshold sensitivity](../outputs/test/selected/evaluation.png)
+![Held-out ROC, precision–recall, calibration and threshold sensitivity](assets/evaluation.png)
 
 The research-only Gradio demo was checked locally with the selected checkpoint and a development image. It displays the fixed threshold and an explicitly uncalibrated model score; this interface check is not another test-set evaluation.
 

@@ -107,10 +107,17 @@ def main():
     p.add_argument("--weight-decay", type=float, default=0.0001); p.add_argument("--weighted", action="store_true")
     p.add_argument("--random-init", action="store_true", help="Untrained backbone for smoke tests only")
     p.add_argument("--weights-cache", type=Path)
+    p.add_argument("--inventory", type=Path)
+    p.add_argument("--inventory-sha256")
     p.add_argument("--cpu", action="store_true")
     args = p.parse_args()
     if min(args.epochs, args.patience, args.batch_size) < 1 or args.lr <= 0 or args.weight_decay < 0:
         p.error("Epochs, patience, batch size and learning rate must be positive; weight decay must be nonnegative")
+    if (args.inventory is None) != (args.inventory_sha256 is None) or (not args.random_init and args.inventory is None):
+        p.error("Provide --inventory and --inventory-sha256 (only random-init smoke tests may omit them)")
+    if args.inventory is not None:
+        from glenda.verify_data import verify
+        verify(args.raw, args.manifest, args.inventory, args.inventory_sha256, "development")
     train(args)
 
 

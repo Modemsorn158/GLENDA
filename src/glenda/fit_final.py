@@ -14,15 +14,15 @@ import numpy as np
 import torch
 import torchvision
 import sklearn
-from sklearn.metrics import precision_recall_curve
 from torch import nn
 from torch.utils.data import DataLoader
 
 from glenda.dataset import DevelopmentDataset
 from glenda.models import build_model, pretrained_url, set_training_mode
+from glenda.select_threshold import choose_threshold
 
 
-def fit(raw: Path, manifest: Path, trial: Path, threshold_file: Path, output: Path) -> None:
+def fit(raw: Path, manifest: Path, trial: Path, threshold_file: Path, output: Path, inventory: Path = None, inventory_sha256: str = None) -> None:
     raw, output = raw.resolve(), output.resolve()
     if output == raw or raw in output.parents:
         raise ValueError("Output must be outside raw data")
@@ -37,6 +37,19 @@ def fit(raw: Path, manifest: Path, trial: Path, threshold_file: Path, output: Pa
     search = json.loads((trial.parent / "search.json").read_text(encoding="utf-8"))
     if search["manifest_sha256"] != manifest_hash or search["configurations"][selection["trial_index"]] != selection["trial_configuration"]:
         raise ValueError("Selected trial does not match the original search")
+    source_names = ("dataset.py", "models.py", "train_fold.py", "verify_data.py")
+    current_sources = {name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest() for name in source_names}
+    if search.get("training_source_sha256") != current_sources:
+        raise ValueError("Training source differs from the cross-validation search or was not recorded; start a new study")
+    if (inventory is None) != (inventory_sha256 is None):
+        raise ValueError("Inventory and its trusted hash must be supplied together")
+    if inventory is not None:
+        if search.get("inventory_sha256") != inventory_sha256.lower():
+            raise ValueError("Inventory differs from cross-validation")
+        from glenda.verify_data import verify
+        verify(raw, manifest, inventory, inventory_sha256, "development")
+    if len(selection.get("fold_epoch_history_sha256", [])) != 5 or len(selection.get("fold_best_epochs", [])) != 5:
+        raise ValueError("Threshold selection does not freeze all epoch histories; start a new study")
     fold_configs, best_epochs, labels, scores = [], [], [], []
     for fold in range(5):
         if json.loads((trial / f"fold_{fold}_status.json").read_text(encoding="utf-8"))["status"] != "complete":
@@ -51,13 +64,15 @@ def fit(raw: Path, manifest: Path, trial: Path, threshold_file: Path, output: Pa
         if config["manifest_sha256"] != manifest_hash or config["fold"] != fold:
             raise ValueError("Fold configuration does not match manifest")
         fold_configs.append(config)
-        with (folder / "epochs.csv").open(encoding="utf-8", newline="") as f:
+        epoch_file = folder / "epochs.csv"
+        if hashlib.sha256(epoch_file.read_bytes()).hexdigest() != selection["fold_epoch_history_sha256"][fold]:
+            raise ValueError("Epoch history changed after threshold selection")
+        with epoch_file.open(encoding="utf-8", newline="") as f:
             epochs = list(csv.DictReader(f))
         best_epochs.append(int(max(epochs, key=lambda row: float(row["validation_average_precision"]))["epoch"]))
-    precision, recall, thresholds = precision_recall_curve(labels, scores)
-    denominator = precision[:-1] + recall[:-1]
-    f1 = np.divide(2 * precision[:-1] * recall[:-1], denominator, out=np.zeros_like(denominator), where=denominator != 0)
-    expected_threshold = thresholds[np.flatnonzero(np.isclose(f1, np.max(f1), rtol=0, atol=1e-12))[-1]]
+        if best_epochs[-1] != selection["fold_best_epochs"][fold]:
+            raise ValueError("Best epoch differs from frozen selection")
+    expected_threshold, _ = choose_threshold(labels, scores, selection.get("minimum_sensitivity"))
     if not np.isclose(selection["threshold"], expected_threshold, rtol=0, atol=1e-12):
         raise ValueError("Threshold does not match the prespecified selection rule")
     keys = ["architecture", "fine_tuning", "lr", "weight_decay", "batch_size", "seed", "weighted", "random_init", "cpu"]
@@ -86,6 +101,7 @@ def fit(raw: Path, manifest: Path, trial: Path, threshold_file: Path, output: Pa
         raise ValueError("Pretrained weights differ from those used in CV")
     metadata = {**base, "epochs": epoch_count, "cv_best_epochs": best_epochs,
                 "manifest_sha256": manifest_hash, "threshold": selection["threshold"],
+                "inventory_sha256": inventory_sha256.lower() if inventory_sha256 else None,
                 "threshold_file_sha256": hashlib.sha256(threshold_file.read_bytes()).hexdigest(),
                 "pretrained_weights_url": url, "pretrained_weights_sha256": weight_hash,
                 "device": str(device), "device_name": torch.cuda.get_device_name(0) if device.type == "cuda" else platform.processor(),
@@ -117,7 +133,9 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ("raw", "manifest", "trial", "threshold", "output"):
         p.add_argument(name, type=Path)
-    a = p.parse_args(); fit(a.raw, a.manifest, a.trial, a.threshold, a.output)
+    p.add_argument("--inventory", type=Path, required=True)
+    p.add_argument("--inventory-sha256", required=True)
+    a = p.parse_args(); fit(a.raw, a.manifest, a.trial, a.threshold, a.output, a.inventory, a.inventory_sha256)
 
 
 if __name__ == "__main__":

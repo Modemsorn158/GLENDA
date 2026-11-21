@@ -15,7 +15,7 @@ import numpy as np
 OPTIONS = {"architecture", "fine_tuning", "epochs", "patience", "batch_size", "lr", "weight_decay", "seed", "weighted", "cpu", "random_init"}
 
 
-def run(raw: Path, manifest: Path, config_path: Path, output: Path) -> None:
+def run(raw: Path, manifest: Path, config_path: Path, output: Path, inventory: Path = None, inventory_sha256: str = None) -> None:
     raw, output = raw.resolve(), output.resolve()
     if output == raw or raw in output.parents:
         raise ValueError("Experiment output must be outside raw data")
@@ -27,12 +27,18 @@ def run(raw: Path, manifest: Path, config_path: Path, output: Path) -> None:
             raise ValueError("Unknown configuration option")
         if any(not isinstance(config.get(key, False), bool) for key in ("weighted", "cpu", "random_init")):
             raise ValueError("Boolean options must be true or false")
-    source_files = [Path(__file__).with_name(name) for name in ("dataset.py", "models.py", "train_fold.py")]
+    source_files = [Path(__file__).with_name(name) for name in ("dataset.py", "models.py", "train_fold.py", "verify_data.py")]
     def source_hashes():
         return {file.name: hashlib.sha256(file.read_bytes()).hexdigest() for file in source_files}
     identity = {"manifest_sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(),
                 "configurations": configurations, "training_source_sha256": source_hashes(),
                 "python_version": sys.version.split()[0]}
+    if (inventory is None) != (inventory_sha256 is None):
+        raise ValueError("Inventory and its trusted hash must be supplied together")
+    if inventory is not None:
+        from glenda.verify_data import verify
+        verify(raw, manifest, inventory, inventory_sha256, "development")
+        identity["inventory_sha256"] = inventory_sha256.lower()
     output.mkdir(parents=True, exist_ok=True)
     identity_file = output / "search.json"
     if identity_file.exists():
@@ -61,6 +67,8 @@ def run(raw: Path, manifest: Path, config_path: Path, output: Path) -> None:
             else:
                 run_dir.parent.mkdir(parents=True, exist_ok=True)
                 command = [sys.executable, "-m", "glenda.train_fold", str(raw), str(manifest.resolve()), str(run_dir), "--fold", str(fold), "--weights-cache", str(output / ".torch-cache")]
+                if inventory is not None:
+                    command.extend(["--inventory", str(inventory.resolve()), "--inventory-sha256", inventory_sha256])
                 for key, value in config.items():
                     flag = "--" + key.replace("_", "-")
                     if isinstance(value, bool):
@@ -91,8 +99,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("raw", type=Path); parser.add_argument("manifest", type=Path)
     parser.add_argument("config", type=Path); parser.add_argument("output", type=Path)
+    parser.add_argument("--inventory", type=Path, required=True)
+    parser.add_argument("--inventory-sha256", required=True)
     args = parser.parse_args()
-    run(args.raw, args.manifest, args.config, args.output)
+    run(args.raw, args.manifest, args.config, args.output, args.inventory, args.inventory_sha256)
 
 
 if __name__ == "__main__":

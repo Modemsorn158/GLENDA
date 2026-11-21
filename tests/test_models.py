@@ -38,6 +38,18 @@ class ModelTests(unittest.TestCase):
         model = build_model("efficientnet_b0", "partial", pretrained=False)
         self.assertTrue(all(not p.requires_grad for p in model.features[:-3].parameters()))
         self.assertTrue(all(p.requires_grad for p in model.features[-3:].parameters()))
+        set_training_mode(model)
+        self.assertTrue(all(not block.training for block in model.features[:-3]))
+        self.assertTrue(all(block.training for block in model.features[-3:]))
+
+    def test_frozen_features_are_deterministic_in_training_mode(self):
+        model = build_model("efficientnet_b0", "frozen", pretrained=False)
+        set_training_mode(model)
+        x = torch.randn(2, 3, 64, 64)
+        with torch.no_grad():
+            a, b = model.features(x), model.features(x)
+        self.assertTrue(torch.equal(a, b))
+        self.assertTrue(model.classifier.training)
 
     def test_training_cannot_write_into_raw_data(self):
         with tempfile.TemporaryDirectory() as temp:

@@ -5,11 +5,19 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from glenda.select_threshold import select
+from glenda.select_threshold import choose_threshold, select
 from glenda.select_candidate import select as select_candidate
 
 
 class ThresholdTests(unittest.TestCase):
+    def test_prespecified_sensitivity_constraint(self):
+        labels = [1, 1, 0, 0]
+        scores = [0.9, 0.4, 0.8, 0.1]
+        threshold, _ = choose_threshold(labels, scores, 1.0)
+        self.assertEqual(threshold, 0.4)
+        with self.assertRaises(ValueError):
+            choose_threshold(labels, scores, 1.01)
+
     def test_selects_only_complete_development_predictions(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp); trial = root / "trial_000"; trial.mkdir()
@@ -28,7 +36,7 @@ class ThresholdTests(unittest.TestCase):
                 (trial / f"fold_{fold}_status.json").write_text('{"status": "complete", "best_validation_average_precision": 1.0}')
                 folder = trial / f"fold_{fold}"; folder.mkdir()
                 (folder / "config.json").write_text(json.dumps({"manifest_sha256": manifest_hash, "fold": fold}))
-                (folder / "epochs.csv").write_text("validation_average_precision\n1.0\n")
+                (folder / "epochs.csv").write_text("epoch,validation_average_precision\n1,1.0\n")
                 (folder / "best.pt").write_bytes(b"checkpoint")
                 with (folder / "validation_predictions.csv").open("w", encoding="utf-8", newline="") as f:
                     writer = csv.DictWriter(f, fieldnames=["path", "label", "score", "group"]); writer.writeheader()

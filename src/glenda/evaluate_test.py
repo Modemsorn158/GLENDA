@@ -21,7 +21,8 @@ from glenda.evaluation import cluster_bootstrap, metrics
 from glenda.inference import load_final, predict_image
 
 
-def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: Path, bootstrap: int = 1000) -> None:
+def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: Path, bootstrap: int = 1000,
+             inventory: Path = None, inventory_sha256: str = None) -> None:
     raw, output, ledger = raw.resolve(), output.resolve(), ledger.resolve()
     if any(path == raw or raw in path.parents for path in (output, ledger)):
         raise ValueError("Output and ledger must be outside raw data")
@@ -38,6 +39,13 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
     digest = hashlib.sha256(manifest.read_bytes()).hexdigest()
     if config["manifest_sha256"] != digest:
         raise ValueError("Checkpoint and manifest differ")
+    if (inventory is None) != (inventory_sha256 is None):
+        raise ValueError("Inventory and its trusted hash must be supplied together")
+    if inventory is not None:
+        if config.get("inventory_sha256") != inventory_sha256.lower():
+            raise ValueError("Inventory differs from final training or was not recorded")
+        from glenda.verify_data import verify
+        verify(raw, manifest, inventory, inventory_sha256, "test")
     # Validates uniqueness and known group separation without opening images.
     DevelopmentDataset(raw, manifest, 0, True)
     with manifest.open(encoding="utf-8", newline="") as f:
@@ -157,7 +165,10 @@ def main():
     for name in ("raw", "manifest", "checkpoint", "output", "ledger"):
         p.add_argument(name, type=Path)
     p.add_argument("--bootstrap", type=int, default=1000)
-    a = p.parse_args(); evaluate(a.raw, a.manifest, a.checkpoint, a.output, a.ledger, a.bootstrap)
+    p.add_argument("--inventory", type=Path, required=True)
+    p.add_argument("--inventory-sha256", required=True)
+    a = p.parse_args()
+    evaluate(a.raw, a.manifest, a.checkpoint, a.output, a.ledger, a.bootstrap, a.inventory, a.inventory_sha256)
 
 
 if __name__ == "__main__":

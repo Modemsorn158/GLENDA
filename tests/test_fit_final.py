@@ -37,7 +37,9 @@ class FinalFitTests(unittest.TestCase):
             chosen = {"architecture": "efficientnet_b0", "fine_tuning": "frozen", "lr": 0.001,
                       "weight_decay": 0.0, "batch_size": 2, "seed": 42, "weighted": False,
                       "random_init": False, "cpu": True}
-            (search / "search.json").write_text(json.dumps({"manifest_sha256": digest, "configurations": [chosen]}))
+            source_dir = Path(__file__).resolve().parents[1] / "src" / "glenda"
+            source_hashes = {name: hashlib.sha256((source_dir / name).read_bytes()).hexdigest() for name in ("dataset.py", "models.py", "train_fold.py", "verify_data.py")}
+            (search / "search.json").write_text(json.dumps({"manifest_sha256": digest, "configurations": [chosen], "training_source_sha256": source_hashes}))
             (search / "fold_results.json").write_text(json.dumps([{"trial": 0, "fold": fold, "status": "complete", "best_validation_average_precision": 1.0} for fold in range(5)]))
             for fold in range(5):
                 (trial / f"fold_{fold}_status.json").write_text('{"status":"complete", "best_validation_average_precision":1.0}')
@@ -53,6 +55,20 @@ class FinalFitTests(unittest.TestCase):
             select_candidate(search)
             threshold = root / "threshold.json"
             select(manifest, trial, threshold)
+            history = trial / "fold_0" / "epochs.csv"
+            original = history.read_bytes()
+            history.write_bytes(original + b"2,0.1\n")
+            with self.assertRaisesRegex(ValueError, "Epoch history changed"):
+                fit(raw, manifest, trial, threshold, root / "tampered")
+            history.write_bytes(original)
+            search_file = search / "search.json"
+            saved_search = search_file.read_bytes()
+            changed = json.loads(saved_search)
+            changed["training_source_sha256"]["models.py"] = "changed"
+            search_file.write_text(json.dumps(changed), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "Training source differs"):
+                fit(raw, manifest, trial, threshold, root / "wrong-source")
+            search_file.write_bytes(saved_search)
             with patch("glenda.fit_final.pretrained_url", return_value="https://example.org/fake.pth"), \
                  patch("glenda.fit_final.build_model", side_effect=lambda *args, **kwargs: torch.nn.Sequential(torch.nn.Flatten(), torch.nn.Linear(3 * 224 * 224, 1))), \
                  contextlib.redirect_stdout(io.StringIO()):
