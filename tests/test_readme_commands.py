@@ -1,4 +1,4 @@
-"""Check documented study commands through their actual argument parsers."""
+"""Check the technical guide's study commands through their actual parsers."""
 import importlib
 import re
 import shlex
@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 class ReadmeCommandTests(unittest.TestCase):
     def test_documented_commands_supply_inventory_arguments(self):
-        readme = (Path(__file__).resolve().parents[1] / "README.md").read_text(encoding="utf-8")
+        readme = (Path(__file__).resolve().parents[1] / "docs" / "technical-guide.md").read_text(encoding="utf-8")
         commands = {"train_fold": "train", "cross_validate": "run", "fit_final": "fit", "evaluate_test": "evaluate"}
         for module_name, entry in commands.items():
             with self.subTest(module=module_name):
