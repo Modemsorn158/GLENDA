@@ -38,6 +38,7 @@ class DevelopmentSummaryTests(unittest.TestCase):
             self.assertIn("1.0000", output.read_text(encoding="utf-8"))
             published = output.with_suffix(".json").read_text(encoding="utf-8")
             self.assertNotIn('"path"', published)
+            self.assertAlmostEqual(json.loads(published)["trials"][0]["folds"][0]["brier"], 0.04)
             prediction_file = root / "trial_000/fold_0/validation_predictions.csv"
             prediction_file.write_text(prediction_file.read_text().replace("0.8", "0.1"))
             with self.assertRaisesRegex(ValueError, "AP does not match"):

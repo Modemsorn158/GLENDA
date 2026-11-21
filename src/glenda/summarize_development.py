@@ -5,9 +5,9 @@ import hashlib
 import json
 import math
 from pathlib import Path
-from statistics import mean, stdev
+from statistics import mean, median, stdev
 
-from sklearn.metrics import average_precision_score
+from sklearn.metrics import average_precision_score, brier_score_loss
 
 
 def digest(path):
@@ -60,10 +60,14 @@ def summarize(search, manifest, output):
                 raise ValueError("Missing training history or checkpoint")
             best = max(history, key=lambda row: float(row["validation_average_precision"]))
             recorded = float(matches[0]["best_validation_average_precision"])
-            calculated = average_precision_score([int(row["label"]) for row in predictions], scores)
+            labels = [int(row["label"]) for row in predictions]
+            if set(labels) != {0, 1}:
+                raise ValueError("Validation fold must contain both classes")
+            calculated = average_precision_score(labels, scores)
             if not math.isclose(recorded, float(best["validation_average_precision"]), abs_tol=1e-12, rel_tol=0) or not math.isclose(recorded, calculated, abs_tol=1e-12, rel_tol=0):
                 raise ValueError("Fold AP does not match its history and predictions")
-            folds.append({"fold": fold, "best_ap": recorded, "best_epoch": int(best["epoch"]),
+            folds.append({"fold": fold, "best_ap": recorded, "brier": float(brier_score_loss(labels, scores)),
+                          "median_score": float(median(scores)), "best_epoch": int(best["epoch"]),
                           "epochs_run": len(history), "history_sha256": digest(history_file),
                           "predictions_sha256": digest(prediction_file), "checkpoint_sha256": digest(folder / "best.pt")})
         values = [item["best_ap"] for item in folds]
@@ -73,15 +77,17 @@ def summarize(search, manifest, output):
     lines = ["# Extended development training results", "",
              "These are adaptively selected development-fold scores, not an independent or clinical performance estimate. "
              "The original holdout was already consumed and was not reevaluated. Patient independence is not established.", "",
-             "| Fine-tuning | Fold 0 AP | Fold 1 AP | Fold 2 AP | Fold 3 AP | Fold 4 AP | Mean AP | Sample SD | Best epochs | Epochs run |",
-             "|---|---:|---:|---:|---:|---:|---:|---:|---|---|"]
+             "| Fine-tuning | Fold 0 AP | Fold 1 AP | Fold 2 AP | Fold 3 AP | Fold 4 AP | Mean AP | Sample SD | Mean Brier | Best epochs | Epochs run |",
+             "|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|"]
     for trial in trials:
         folds = trial["folds"]
         lines.append("| " + trial["configuration"]["fine_tuning"] + " | " + " | ".join(f"{f['best_ap']:.4f}" for f in folds) +
-                     f" | {trial['mean_ap']:.4f} | {trial['sample_sd']:.4f} | " + ", ".join(str(f["best_epoch"]) for f in folds) +
+                     f" | {trial['mean_ap']:.4f} | {trial['sample_sd']:.4f} | {mean(f['brier'] for f in folds):.4f} | " + ", ".join(str(f["best_epoch"]) for f in folds) +
                      " | " + ", ".join(str(f["epochs_run"]) for f in folds) + " |")
     lines.extend(["", "Each best epoch was chosen using its own validation fold; this is optimistic. "
                   "Fixed learning rate isolates the fine-tuning setting only within this limited comparison, and does not establish convergence or clinical utility. "
+                  "Mean Brier is an unweighted average across folds and does not isolate calibration; scores are not calibrated probabilities. "
+                  "The JSON includes per-fold Brier scores and median scores to help inspect score-scale variation. "
                   "See the [protocol](deep_development_protocol.md) and the adjacent JSON for configuration and artifact hashes.", ""])
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("\n".join(lines), encoding="utf-8")
