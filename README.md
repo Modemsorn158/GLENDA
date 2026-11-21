@@ -33,6 +33,7 @@ A later experiment trained models for longer and compared three ways of adjustin
 | See the detailed research methods and recorded results | [Research report](reports/research_report.md), [original test results](reports/test_results.md), and [extended development results](reports/deep_development_results.md) |
 | Install the code, run tests or understand the safeguards | [Technical guide](docs/technical-guide.md) |
 | Understand what a responsible next study would need | [Next-study protocol](docs/next_study.md) |
+| See how the latest audit was addressed and what remains | [Audit response](reports/comprehensive_audit_response.md) |
 
 ## What is in the dataset?
 
@@ -42,6 +43,6 @@ Many frames come from the same video or known case, so they are not as independe
 
 ## Can I try the project?
 
-The repository contains research code, reports and tests. It does **not** include the private image data or trained checkpoints needed to run the demonstration. The [technical guide](docs/technical-guide.md) explains how to install dependencies, audit authorized data, run tests and set up a new study. The original test has already been used: do not reuse it to select a model, adjust a threshold or claim a fresh evaluation.
+The current checkout contains research code, reports and tests, but not the dataset or trained checkpoints needed to run the demonstration. **Older commits in the repository's Git history do contain dataset images.** Removing images from the current checkout does not remove them from earlier commits; access to that history depends on the repository host's permissions and the dataset's terms. The [technical guide](docs/technical-guide.md) explains how to install dependencies, audit authorized data, run tests and set up a new study. The original test has already been used: do not reuse it to select a model, adjust a threshold or claim a fresh evaluation.
 
 The project’s own software is available under the [MIT License](LICENSE). The [GLENDA dataset](https://ftp.itec.aau.at/datasets/GLENDA/) has separate non-commercial scientific research and attribution requirements, and third-party pretrained weights have their own terms. The [study report](reports/study_explained.md) provides the dataset citation.

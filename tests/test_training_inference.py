@@ -1,5 +1,6 @@
 """Exercise training and prediction using only generated images."""
 import csv
+import hashlib
 import json
 import os
 import subprocess
@@ -26,17 +27,29 @@ class TrainingInferenceTest(unittest.TestCase):
                     name = f"fold{fold}_class{label}.png"
                     Image.new("RGB", (32, 24), (30 + label * 180, 40 + fold * 50, 80)).save(raw / name)
                     rows.append(dict(path=name, label=label, group=name, partition="development", cv_fold=fold))
-            rows.append(dict(path="must_not_be_opened.png", label=1, group="test", partition="test", cv_fold=""))
+            rows.append(dict(path="must_not_be_opened.png", label=1, group="must_not_be_opened.png", partition="test", cv_fold=""))
             manifest = root / "manifest.csv"
             with manifest.open("w", encoding="utf-8", newline="") as handle:
                 writer = csv.DictWriter(handle, fieldnames=["path", "label", "group", "partition", "cv_fold"])
                 writer.writeheader()
                 writer.writerows(rows)
+            inventory = root / "inventory.csv"
+            with inventory.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=["path", "label", "case_id", "video_id", "sha256"])
+                writer.writeheader()
+                for row in rows:
+                    path = raw / row["path"]
+                    digest = hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else "0" * 64
+                    writer.writerow(dict(path=row["path"], label=row["label"], case_id="", video_id=row["path"], sha256=digest))
+            candidates = root / "pairs.csv"; candidates.write_text("path_a,path_b\n", encoding="utf-8")
+            inventory_hash = hashlib.sha256(inventory.read_bytes()).hexdigest()
+            candidate_hash = hashlib.sha256(candidates.read_bytes()).hexdigest()
             output = root / "run"
             env = dict(os.environ, OMP_NUM_THREADS="1", MKL_NUM_THREADS="1", OPENBLAS_NUM_THREADS="1")
             result = subprocess.run([sys.executable, "-m", "glenda.train_fold", str(raw), str(manifest),
                                      str(output), "--fold", "0", "--epochs", "1", "--batch-size", "2",
-                                     "--random-init", "--cpu"], capture_output=True, text=True, env=env, timeout=120)
+                                     "--random-init", "--cpu", "--inventory", str(inventory), "--inventory-sha256", inventory_hash,
+                                     "--candidates", str(candidates), "--candidates-sha256", candidate_hash], capture_output=True, text=True, env=env, timeout=120)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             config = json.loads((output / "config.json").read_text(encoding="utf-8"))
             self.assertTrue(config["random_init"])

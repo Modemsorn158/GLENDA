@@ -3,14 +3,16 @@ import argparse
 import csv
 import json
 from pathlib import Path
+from glenda.evaluation_integrity import verify_results
 
 
-def summarize(test: Path, ledger: Path, output: Path) -> None:
+def summarize(test: Path, ledger: Path, output: Path, *, allow_legacy_unverified=False) -> None:
     data = json.loads((test / "metrics.json").read_text(encoding="utf-8"))
     provenance = data["provenance"]
     lock = json.loads((ledger / f"{provenance['holdout_sha256']}.json").read_text(encoding="utf-8"))
     if lock["status"] != "complete" or lock["checkpoint_sha256"] != provenance["checkpoint_sha256"] or Path(lock["output"]).resolve() != test.resolve():
         raise ValueError("Completed test ledger does not match results")
+    verify_results(test, lock, allow_legacy_unverified=allow_legacy_unverified)
     point, intervals = data["point"], data["intervals"]
     with (test / "group_errors.csv").open(encoding="utf-8", newline="") as f:
         group_rows = list(csv.DictReader(f))
@@ -29,6 +31,8 @@ def summarize(test: Path, ledger: Path, output: Path) -> None:
              f"Confusion counts: TP {point['tp']}, FP {point['fp']}, TN {point['tn']}, FN {point['fn']}.",
              f"An always-negative classifier would have accuracy {(point['tn'] + point['fp']) / point['n']:.4f} and sensitivity 0 on this holdout.", "",
              "| Metric | Estimate | Cluster bootstrap 95% interval | Valid replicates |", "|---|---:|---:|---:|"]
+    if "artifact_sha256" not in lock:
+        lines[2:2] = ["**Legacy result:** the original ledger did not record output hashes; result-file integrity has not been verified by that ledger.", ""]
     for key, label in keys:
         interval = intervals[key]
         bounds = f"{fmt(interval['lower'])}–{fmt(interval['upper'])}" if interval["lower"] is not None else "undefined"
@@ -55,7 +59,8 @@ def summarize(test: Path, ledger: Path, output: Path) -> None:
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("test", type=Path); p.add_argument("ledger", type=Path); p.add_argument("output", type=Path)
-    a = p.parse_args(); summarize(a.test, a.ledger, a.output)
+    p.add_argument("--allow-legacy-unverified", action="store_true", help="Acknowledge that old ledgers have no output hashes")
+    a = p.parse_args(); summarize(a.test, a.ledger, a.output, allow_legacy_unverified=a.allow_legacy_unverified)
 
 
 if __name__ == "__main__":

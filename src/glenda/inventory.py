@@ -6,6 +6,7 @@ import collections
 import csv
 import hashlib
 import json
+import math
 import re
 from pathlib import Path
 
@@ -15,12 +16,51 @@ POSITIVE = re.compile(r"c_(\d+)_v_\(video_(\d+)\.mp4\)_f_(\d+)\.jpg")
 NEGATIVE = re.compile(r"v_(\d+)_s_(\d+)-(\d+)")
 
 
+def validate_coco(coco):
+    """Validate COCO IDs, references and polygon geometry used by this release."""
+    def unique(items, kind):
+        ids = [item.get("id") for item in items]
+        if any(not isinstance(value, int) or isinstance(value, bool) for value in ids) or len(ids) != len(set(ids)):
+            raise ValueError(f"Invalid or duplicate COCO {kind} IDs")
+        return {item["id"]: item for item in items}
+    images = unique(coco["images"], "image")
+    categories = unique(coco["categories"], "category")
+    unique(coco["annotations"], "annotation")
+    def finite(value):
+        return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+    for image in images.values():
+        if not all(finite(image.get(k)) and image[k] > 0 for k in ("width", "height")):
+            raise ValueError("Invalid COCO image dimensions")
+    for annotation in coco["annotations"]:
+        image = images.get(annotation.get("image_id"))
+        if image is None or annotation.get("category_id") not in categories:
+            raise ValueError("COCO annotation references an unknown image or category")
+        box = annotation.get("bbox")
+        if not isinstance(box, list) or len(box) != 4 or not all(finite(v) for v in box):
+            raise ValueError("Invalid COCO bounding box")
+        x, y, width, height = box
+        if x < 0 or y < 0 or width <= 0 or height <= 0 or x + width > image["width"] or y + height > image["height"]:
+            raise ValueError("COCO bounding box is outside image bounds")
+        if not finite(annotation.get("area")) or annotation["area"] <= 0:
+            raise ValueError("Invalid COCO annotation area")
+        polygons = annotation.get("segmentation", [])
+        if not isinstance(polygons, list):
+            raise ValueError("Unsupported COCO segmentation; expected polygons")
+        for polygon in polygons:
+            if not isinstance(polygon, list) or len(polygon) < 6 or len(polygon) % 2 or not all(finite(v) for v in polygon):
+                raise ValueError("Invalid COCO polygon")
+            if any(v < 0 or v > (image["width"] if i % 2 == 0 else image["height"]) for i, v in enumerate(polygon)):
+                raise ValueError("COCO polygon is outside image bounds")
+    return {"version": 1, "images": len(images), "annotations": len(coco["annotations"]), "categories": len(categories)}
+
+
 def audit(root: Path, out: Path) -> dict:
     root = root.resolve()
     out = out.resolve()
     if out == root or root in out.parents:
         raise ValueError("Output must be outside the raw dataset")
     coco = json.loads((root / "pathology/coco.json").read_text(encoding="utf-8"))
+    coco_validation = validate_coco(coco)
     images = {i["file_name"]: i for i in coco["images"]}
     if len(images) != len(coco["images"]):
         raise ValueError("Duplicate COCO filenames")
@@ -88,6 +128,7 @@ def audit(root: Path, out: Path) -> dict:
         writer = csv.DictWriter(f, fieldnames=list(rows[0]) if rows else ["path"])
         writer.writeheader(); writer.writerows(rows)
     summary = {"frames": len(rows), "positive": sum(r["label"] for r in rows),
+               "coco_validation": coco_validation,
                "negative": sum(not r["label"] for r in rows), "coco_annotations": len(coco["annotations"]),
                "positive_cases": len({r['case_id'] for r in rows if r['label']}),
                "positive_videos": len({r['video_id'] for r in rows if r['label']}),

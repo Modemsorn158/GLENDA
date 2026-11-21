@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 import tempfile
 from pathlib import Path
 from types import SimpleNamespace
@@ -8,10 +9,37 @@ from unittest.mock import patch
 
 from PIL import Image
 
-from glenda.demo import classify, main
+from glenda.demo import classify, find_upload_directories, main
 
 
 class DemoTests(unittest.TestCase):
+    def test_existing_session_directories_are_reported_not_removed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            old = root / "gradio_uploads_old"; old.mkdir()
+            live = root / "gradio_uploads_live"; live.mkdir()
+            (old / "upload.bin").write_bytes(b"synthetic")
+            self.assertEqual(find_upload_directories(root), [live, old])
+            self.assertTrue((old / "upload.bin").exists())
+
+    def test_forced_exit_leaves_session_for_manual_review(self):
+        with tempfile.TemporaryDirectory() as temp:
+            code = ("import tempfile, pathlib, sys, time; "
+                    "d=tempfile.TemporaryDirectory(prefix='gradio_uploads_', dir=sys.argv[1]); "
+                    "pathlib.Path(d.name, 'synthetic.bin').write_bytes(b'synthetic'); "
+                    "print(d.name, flush=True); time.sleep(60)")
+            child = subprocess.Popen([sys.executable, "-u", "-c", code, temp], stdout=subprocess.PIPE, text=True)
+            try:
+                path = Path(child.stdout.readline().strip())
+                self.assertTrue(path.is_dir())
+                child.kill(); child.wait(timeout=10)
+                self.assertEqual(find_upload_directories(Path(temp)), [path])
+                self.assertTrue((path / "synthetic.bin").exists())
+            finally:
+                if child.poll() is None:
+                    child.kill(); child.wait(timeout=10)
+                child.stdout.close()
+
     def test_fixed_threshold_and_missing_input(self):
         with patch("glenda.demo.predict_image", return_value=0.7):
             label, score, threshold = classify(None, {"threshold": 0.6}, Image.new("RGB", (4, 4)), None)

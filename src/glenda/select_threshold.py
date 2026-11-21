@@ -54,6 +54,8 @@ def select(manifest: Path, trial: Path, output: Path, minimum_sensitivity=None) 
         config = json.loads((trial / f"fold_{fold}" / "config.json").read_text(encoding="utf-8"))
         if config["manifest_sha256"] != manifest_hash or config["fold"] != fold or any(config.get(k) != v for k, v in selected_config.items()):
             raise ValueError("Fold configuration does not match the selected trial")
+        if "inventory_sha256" in search and (config.get("inventory_sha256") != search["inventory_sha256"] or config.get("candidates_sha256") != search.get("candidates_sha256")):
+            raise ValueError("Fold input provenance differs from the selected search")
         prediction_file = trial / f"fold_{fold}" / "validation_predictions.csv"
         prediction_hashes.append(hashlib.sha256(prediction_file.read_bytes()).hexdigest())
         fold_labels, fold_scores = [], []

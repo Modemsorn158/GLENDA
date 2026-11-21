@@ -18,7 +18,7 @@ from sklearn.metrics import average_precision_score
 from torch import nn
 from torch.utils.data import DataLoader
 
-from glenda.dataset import DevelopmentDataset
+from glenda.dataset import DevelopmentDataset, inference_contract
 from glenda.models import build_model, pretrained_url, set_training_mode
 
 
@@ -31,6 +31,16 @@ def train(args):
         raise ValueError("Weight cache must be outside the raw dataset")
     if args.output.exists():
         raise FileExistsError("Refusing to overwrite an existing experiment")
+    inventory = getattr(args, "inventory", None)
+    inventory_hash = getattr(args, "inventory_sha256", None)
+    candidates = getattr(args, "candidates", None)
+    candidates_hash = getattr(args, "candidates_sha256", None)
+    inputs = (inventory, inventory_hash, candidates, candidates_hash)
+    if (any(x is None for x in inputs) and any(x is not None for x in inputs)) or (not args.random_init and any(x is None for x in inputs)):
+        raise ValueError("Trusted inventory and candidate-pair files and hashes are required except for random-init smoke tests")
+    if inventory is not None:
+        from glenda.verify_data import verify
+        verify(args.raw, args.manifest, inventory, inventory_hash, "development", candidates, candidates_hash)
     random.seed(args.seed); np.random.seed(args.seed); torch.manual_seed(args.seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(args.seed)
@@ -40,9 +50,12 @@ def train(args):
     args.output.mkdir(parents=True)
     os.environ["TORCH_HOME"] = str(cache)
     config = {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()}
+    if inventory_hash:
+        config.update(inventory_sha256=inventory_hash.lower(), candidates_sha256=candidates_hash.lower())
     config.update(device=str(device), torch_version=str(torch.__version__), torchvision_version=str(torchvision.__version__),
                   sklearn_version=sklearn.__version__, python_version=platform.python_version(),
                   cuda_version=torch.version.cuda, manifest_sha256=hashlib.sha256(args.manifest.read_bytes()).hexdigest(),
+                  inference_contract=inference_contract(),
                   transforms="resize 224x224; training horizontal flip; ImageNet normalization")
     (args.output / "config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
     model = build_model(args.architecture, args.fine_tuning, not args.random_init).to(device)
@@ -109,15 +122,15 @@ def main():
     p.add_argument("--weights-cache", type=Path)
     p.add_argument("--inventory", type=Path)
     p.add_argument("--inventory-sha256")
+    p.add_argument("--candidates", type=Path)
+    p.add_argument("--candidates-sha256")
     p.add_argument("--cpu", action="store_true")
     args = p.parse_args()
     if min(args.epochs, args.patience, args.batch_size) < 1 or args.lr <= 0 or args.weight_decay < 0:
         p.error("Epochs, patience, batch size and learning rate must be positive; weight decay must be nonnegative")
-    if (args.inventory is None) != (args.inventory_sha256 is None) or (not args.random_init and args.inventory is None):
-        p.error("Provide --inventory and --inventory-sha256 (only random-init smoke tests may omit them)")
-    if args.inventory is not None:
-        from glenda.verify_data import verify
-        verify(args.raw, args.manifest, args.inventory, args.inventory_sha256, "development")
+    inputs = (args.inventory, args.inventory_sha256, args.candidates, args.candidates_sha256)
+    if (any(x is None for x in inputs) and any(x is not None for x in inputs)) or (not args.random_init and any(x is None for x in inputs)):
+        p.error("Provide inventory and candidate-pair files and hashes (only random-init smoke tests may omit them)")
     train(args)
 
 

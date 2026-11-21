@@ -4,13 +4,18 @@ from pathlib import Path
 import torch
 from PIL import Image
 
-from glenda.dataset import preprocessing
+from glenda.dataset import inference_contract, preprocessing
 from glenda.models import build_model
 
 
-def load_final(checkpoint: Path, device: torch.device):
+def load_final(checkpoint: Path, device: torch.device, *, allow_legacy=False):
     payload = torch.load(checkpoint, map_location=device, weights_only=True)
     config = payload["config"]
+    contract = config.get("inference_contract")
+    if contract is None and not allow_legacy:
+        raise ValueError("Legacy checkpoint has no inference contract; explicit acknowledgement required")
+    if contract is not None and contract != inference_contract():
+        raise ValueError("Checkpoint inference contract is incompatible with current preprocessing")
     if not 0 <= float(config["threshold"]) <= 1:
         raise ValueError("Invalid threshold in final checkpoint")
     model = build_model(config["architecture"], config["fine_tuning"], pretrained=False)

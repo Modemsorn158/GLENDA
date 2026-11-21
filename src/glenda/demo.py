@@ -3,6 +3,7 @@ import argparse
 import math
 import os
 import tempfile
+import warnings
 from pathlib import Path
 
 import torch
@@ -13,6 +14,11 @@ RESEARCH_NOTICE = (
     "Research demonstration only. Not clinically validated and not for diagnosis or treatment decisions. "
     "A negative model result does not rule out pathology."
 )
+
+
+def find_upload_directories(parent: Path):
+    """Find possible leftover or active sessions without deleting anything."""
+    return sorted(path for path in parent.glob("gradio_uploads_*") if path.is_dir() and not path.is_symlink())
 
 
 def classify(model, config, image, device):
@@ -29,14 +35,18 @@ def classify(model, config, image, device):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("checkpoint", type=Path)
+    p.add_argument("--allow-legacy-checkpoint", action="store_true", help="Acknowledge missing historical preprocessing metadata")
     a = p.parse_args()
     os.environ["GRADIO_ANALYTICS_ENABLED"] = "False"
+    existing = find_upload_directories(a.checkpoint.resolve().parent)
+    if existing:
+        warnings.warn(f"Found {len(existing)} existing upload directories near the checkpoint; they may be active or abandoned. Inspect them manually; none were removed.")
     # A separate directory per session prevents normal cleanup from removing other files.
     with tempfile.TemporaryDirectory(prefix="gradio_uploads_", dir=a.checkpoint.resolve().parent) as temp_dir:
         os.environ["GRADIO_TEMP_DIR"] = temp_dir
         import gradio as gr
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model, config = load_final(a.checkpoint, device)
+        model, config = load_final(a.checkpoint, device, allow_legacy=a.allow_legacy_checkpoint)
         app = gr.Interface(
             fn=lambda image: classify(model, config, image, device),
             inputs=gr.Image(type="pil", label="Laparoscopic image"),

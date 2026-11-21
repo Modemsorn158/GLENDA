@@ -17,6 +17,12 @@ from glenda.select_candidate import select as select_candidate
 
 
 class FinalFitTests(unittest.TestCase):
+    def test_rejects_unverified_library_call(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with self.assertRaisesRegex(ValueError, "Trusted inventory"):
+                fit(root / "raw", root / "manifest", root / "trial", root / "threshold", root / "output")
+
     def test_final_fit_uses_development_and_selected_threshold(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); raw = root / "raw"; raw.mkdir()
@@ -38,7 +44,7 @@ class FinalFitTests(unittest.TestCase):
                       "weight_decay": 0.0, "batch_size": 2, "seed": 42, "weighted": False,
                       "random_init": False, "cpu": True}
             source_dir = Path(__file__).resolve().parents[1] / "src" / "glenda"
-            source_hashes = {name: hashlib.sha256((source_dir / name).read_bytes()).hexdigest() for name in ("dataset.py", "models.py", "train_fold.py", "verify_data.py")}
+            source_hashes = {name: hashlib.sha256((source_dir / name).read_bytes()).hexdigest() for name in ("dataset.py", "models.py", "train_fold.py", "verify_data.py", "splitting.py")}
             (search / "search.json").write_text(json.dumps({"manifest_sha256": digest, "configurations": [chosen], "training_source_sha256": source_hashes}))
             (search / "fold_results.json").write_text(json.dumps([{"trial": 0, "fold": fold, "status": "complete", "best_validation_average_precision": 1.0} for fold in range(5)]))
             for fold in range(5):
@@ -59,7 +65,7 @@ class FinalFitTests(unittest.TestCase):
             original = history.read_bytes()
             history.write_bytes(original + b"2,0.1\n")
             with self.assertRaisesRegex(ValueError, "Epoch history changed"):
-                fit(raw, manifest, trial, threshold, root / "tampered")
+                fit(raw, manifest, trial, threshold, root / "tampered", _synthetic_test_only=True)
             history.write_bytes(original)
             search_file = search / "search.json"
             saved_search = search_file.read_bytes()
@@ -67,12 +73,12 @@ class FinalFitTests(unittest.TestCase):
             changed["training_source_sha256"]["models.py"] = "changed"
             search_file.write_text(json.dumps(changed), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "Training source differs"):
-                fit(raw, manifest, trial, threshold, root / "wrong-source")
+                fit(raw, manifest, trial, threshold, root / "wrong-source", _synthetic_test_only=True)
             search_file.write_bytes(saved_search)
             with patch("glenda.fit_final.pretrained_url", return_value="https://example.org/fake.pth"), \
                  patch("glenda.fit_final.build_model", side_effect=lambda *args, **kwargs: torch.nn.Sequential(torch.nn.Flatten(), torch.nn.Linear(3 * 224 * 224, 1))), \
                  contextlib.redirect_stdout(io.StringIO()):
-                fit(raw, manifest, trial, threshold, root / "final")
+                fit(raw, manifest, trial, threshold, root / "final", _synthetic_test_only=True)
             metadata = json.loads((root / "final/config.json").read_text())
             self.assertEqual(metadata["epochs"], 1)
             self.assertEqual(metadata["threshold"], 0.8)

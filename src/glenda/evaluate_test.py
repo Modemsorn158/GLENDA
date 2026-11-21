@@ -18,11 +18,12 @@ from sklearn.metrics import precision_recall_curve, roc_curve
 
 from glenda.dataset import DevelopmentDataset
 from glenda.evaluation import cluster_bootstrap, metrics
+from glenda.evaluation_integrity import result_hashes
 from glenda.inference import load_final, predict_image
 
 
 def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: Path, bootstrap: int = 1000,
-             inventory: Path = None, inventory_sha256: str = None) -> None:
+             inventory: Path = None, inventory_sha256: str = None, candidates: Path = None, candidates_sha256: str = None, *, _synthetic_test_only=False) -> None:
     raw, output, ledger = raw.resolve(), output.resolve(), ledger.resolve()
     if any(path == raw or raw in path.parents for path in (output, ledger)):
         raise ValueError("Output and ledger must be outside raw data")
@@ -30,6 +31,8 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
         raise FileExistsError("Refusing to overwrite test evaluation")
     if bootstrap < 1:
         raise ValueError("Bootstrap sample count must be positive")
+    if not _synthetic_test_only and any(x is None for x in (inventory, inventory_sha256, candidates, candidates_sha256)):
+        raise ValueError("Trusted inventory and candidate-pair files and hashes are required")
     os.environ["MPLCONFIGDIR"] = str(output.parent / ".mpl-cache")
     import matplotlib
     matplotlib.use("Agg")
@@ -39,13 +42,15 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
     digest = hashlib.sha256(manifest.read_bytes()).hexdigest()
     if config["manifest_sha256"] != digest:
         raise ValueError("Checkpoint and manifest differ")
-    if (inventory is None) != (inventory_sha256 is None):
-        raise ValueError("Inventory and its trusted hash must be supplied together")
+    if any(x is None for x in (inventory, inventory_sha256, candidates, candidates_sha256)) and any(x is not None for x in (inventory, inventory_sha256, candidates, candidates_sha256)):
+        raise ValueError("Inventory and candidate-pair files and hashes must be supplied together")
     if inventory is not None:
         if config.get("inventory_sha256") != inventory_sha256.lower():
             raise ValueError("Inventory differs from final training or was not recorded")
+        if config.get("candidates_sha256") != candidates_sha256.lower():
+            raise ValueError("Candidate pairs differ from final training or were not recorded")
         from glenda.verify_data import verify
-        verify(raw, manifest, inventory, inventory_sha256, "test")
+        verify(raw, manifest, inventory, inventory_sha256, "test", candidates, candidates_sha256)
     # Validates uniqueness and known group separation without opening images.
     DevelopmentDataset(raw, manifest, 0, True)
     with manifest.open(encoding="utf-8", newline="") as f:
@@ -62,9 +67,11 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
     heldout_digest = hashlib.sha256(json.dumps(heldout_paths, separators=(",", ":")).encode("utf-8")).hexdigest()
     source_dir = Path(__file__).parent
     source_hashes = {name: hashlib.sha256((source_dir / name).read_bytes()).hexdigest()
-                     for name in ("evaluate_test.py", "evaluation.py", "inference.py", "dataset.py", "models.py")}
+                     for name in ("evaluate_test.py", "evaluation.py", "evaluation_integrity.py", "inference.py", "dataset.py", "models.py", "verify_data.py", "splitting.py")}
     checkpoint_digest = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
     audit = {"manifest_sha256": digest, "holdout_sha256": heldout_digest, "checkpoint_sha256": checkpoint_digest,
+             "inventory_sha256": inventory_sha256.lower() if inventory_sha256 else None,
+             "candidates_sha256": candidates_sha256.lower() if candidates_sha256 else None,
              "evaluation_source_sha256": source_hashes, "device": str(device), "torch_version": str(torch.__version__),
              "numpy_version": np.__version__, "matplotlib_version": matplotlib.__version__, "python_version": platform.python_version()}
     ledger.mkdir(parents=True, exist_ok=True)
@@ -157,7 +164,14 @@ def evaluate(raw: Path, manifest: Path, checkpoint: Path, output: Path, ledger: 
     axes[3].axvline(threshold, linestyle="--", color="gray", label="Fixed threshold")
     axes[3].set(xlabel="Threshold", ylabel="Metric", title="Threshold sensitivity", ylim=(0, 1)); axes[3].legend()
     fig.tight_layout(); fig.savefig(output / "evaluation.png", dpi=150); plt.close(fig)
-    lock.write_text(json.dumps({**audit, "output": str(output), "threshold": threshold, "status": "complete"}, indent=2), encoding="utf-8")
+    completed = {**audit, "output": str(output), "threshold": threshold, "status": "complete",
+                 "artifact_sha256": result_hashes(output)}
+    pending = lock.with_suffix(".complete.tmp")
+    with pending.open("x", encoding="utf-8") as handle:
+        json.dump(completed, handle, indent=2)
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(pending, lock)
 
 
 def main():
@@ -167,8 +181,10 @@ def main():
     p.add_argument("--bootstrap", type=int, default=1000)
     p.add_argument("--inventory", type=Path, required=True)
     p.add_argument("--inventory-sha256", required=True)
+    p.add_argument("--candidates", type=Path, required=True)
+    p.add_argument("--candidates-sha256", required=True)
     a = p.parse_args()
-    evaluate(a.raw, a.manifest, a.checkpoint, a.output, a.ledger, a.bootstrap, a.inventory, a.inventory_sha256)
+    evaluate(a.raw, a.manifest, a.checkpoint, a.output, a.ledger, a.bootstrap, a.inventory, a.inventory_sha256, a.candidates, a.candidates_sha256)
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import torch
 
-from glenda.dataset import DevelopmentDataset
+from glenda.dataset import DevelopmentDataset, inference_contract
 from glenda.models import build_model, set_training_mode
 from glenda.train_fold import train
 from glenda.inference import load_final, predict_image
@@ -51,6 +51,18 @@ class ModelTests(unittest.TestCase):
         self.assertTrue(torch.equal(a, b))
         self.assertTrue(model.classifier.training)
 
+    @unittest.skipUnless(torch.cuda.is_available(), "CUDA not available")
+    def test_synthetic_cpu_gpu_inference_scores_match(self):
+        torch.manual_seed(17)
+        cpu_model = build_model("efficientnet_b0", "frozen", pretrained=False).eval()
+        gpu_model = build_model("efficientnet_b0", "frozen", pretrained=False).eval()
+        gpu_model.load_state_dict(cpu_model.state_dict())
+        gpu_model.to("cuda")
+        image = Image.new("RGB", (31, 19), (40, 120, 210))
+        cpu = predict_image(cpu_model, image, torch.device("cpu"))
+        gpu = predict_image(gpu_model, image, torch.device("cuda"))
+        self.assertAlmostEqual(cpu, gpu, delta=1e-5)
+
     def test_training_cannot_write_into_raw_data(self):
         with tempfile.TemporaryDirectory() as temp:
             with self.assertRaises(ValueError):
@@ -60,11 +72,21 @@ class ModelTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             model = build_model("efficientnet_b0", "frozen", pretrained=False)
             path = Path(temp) / "final.pt"
-            torch.save({"state_dict": model.state_dict(), "config": {"architecture": "efficientnet_b0", "fine_tuning": "frozen", "threshold": 0.5}}, path)
+            config = {"architecture": "efficientnet_b0", "fine_tuning": "frozen", "threshold": 0.5, "inference_contract": inference_contract()}
+            torch.save({"state_dict": model.state_dict(), "config": config}, path)
             loaded, config = load_final(path, torch.device("cpu"))
             score = predict_image(loaded, Image.new("RGB", (24, 24), "gray"), torch.device("cpu"))
             self.assertTrue(0 <= score <= 1)
             self.assertEqual(config["threshold"], 0.5)
+            config["inference_contract"]["color"] = "BGR"
+            torch.save({"state_dict": model.state_dict(), "config": config}, path)
+            with self.assertRaisesRegex(ValueError, "inference contract"):
+                load_final(path, torch.device("cpu"))
+            config.pop("inference_contract")
+            torch.save({"state_dict": model.state_dict(), "config": config}, path)
+            with self.assertRaisesRegex(ValueError, "Legacy checkpoint"):
+                load_final(path, torch.device("cpu"))
+            load_final(path, torch.device("cpu"), allow_legacy=True)
 
 
 if __name__ == "__main__":

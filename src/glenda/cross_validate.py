@@ -15,10 +15,12 @@ import numpy as np
 OPTIONS = {"architecture", "fine_tuning", "epochs", "patience", "batch_size", "lr", "weight_decay", "seed", "weighted", "cpu", "random_init"}
 
 
-def run(raw: Path, manifest: Path, config_path: Path, output: Path, inventory: Path = None, inventory_sha256: str = None) -> None:
+def run(raw: Path, manifest: Path, config_path: Path, output: Path, inventory: Path = None, inventory_sha256: str = None, candidates: Path = None, candidates_sha256: str = None, *, _synthetic_test_only=False) -> None:
     raw, output = raw.resolve(), output.resolve()
     if output == raw or raw in output.parents:
         raise ValueError("Experiment output must be outside raw data")
+    if not _synthetic_test_only and any(x is None for x in (inventory, inventory_sha256, candidates, candidates_sha256)):
+        raise ValueError("Trusted inventory and candidate-pair files and hashes are required")
     configurations = json.loads(config_path.read_text(encoding="utf-8"))
     if not isinstance(configurations, list) or not configurations:
         raise ValueError("Search configuration must be a nonempty JSON list")
@@ -27,27 +29,25 @@ def run(raw: Path, manifest: Path, config_path: Path, output: Path, inventory: P
             raise ValueError("Unknown configuration option")
         if any(not isinstance(config.get(key, False), bool) for key in ("weighted", "cpu", "random_init")):
             raise ValueError("Boolean options must be true or false")
-    source_files = [Path(__file__).with_name(name) for name in ("dataset.py", "models.py", "train_fold.py", "verify_data.py")]
+    source_files = [Path(__file__).with_name(name) for name in ("dataset.py", "models.py", "train_fold.py", "verify_data.py", "splitting.py")]
     def source_hashes():
         return {file.name: hashlib.sha256(file.read_bytes()).hexdigest() for file in source_files}
     identity = {"manifest_sha256": hashlib.sha256(manifest.read_bytes()).hexdigest(),
                 "configurations": configurations, "training_source_sha256": source_hashes(),
                 "python_version": sys.version.split()[0]}
-    if (inventory is None) != (inventory_sha256 is None):
-        raise ValueError("Inventory and its trusted hash must be supplied together")
+    if any(x is None for x in (inventory, inventory_sha256, candidates, candidates_sha256)) and any(x is not None for x in (inventory, inventory_sha256, candidates, candidates_sha256)):
+        raise ValueError("Inventory and candidate-pair files and hashes must be supplied together")
     if inventory is not None:
         from glenda.verify_data import verify
-        verify(raw, manifest, inventory, inventory_sha256, "development")
+        verify(raw, manifest, inventory, inventory_sha256, "development", candidates, candidates_sha256)
         identity["inventory_sha256"] = inventory_sha256.lower()
+        identity["candidates_sha256"] = candidates_sha256.lower()
     output.mkdir(parents=True, exist_ok=True)
     identity_file = output / "search.json"
     if identity_file.exists():
         saved = json.loads(identity_file.read_text(encoding="utf-8"))
         if "training_source_sha256" not in saved:
-            # Legacy runs predate source fingerprinting; permit resume but report the limitation.
-            if any(saved.get(k) != identity[k] for k in ("manifest_sha256", "configurations")):
-                raise ValueError("Existing search uses different configurations or manifest")
-            print("Warning: legacy search did not record training-source hashes", flush=True)
+            raise ValueError("Legacy search did not record training-source hashes; start a new search")
         elif saved != identity:
             raise ValueError("Existing search uses different configurations or manifest")
     else:
@@ -68,7 +68,7 @@ def run(raw: Path, manifest: Path, config_path: Path, output: Path, inventory: P
                 run_dir.parent.mkdir(parents=True, exist_ok=True)
                 command = [sys.executable, "-m", "glenda.train_fold", str(raw), str(manifest.resolve()), str(run_dir), "--fold", str(fold), "--weights-cache", str(output / ".torch-cache")]
                 if inventory is not None:
-                    command.extend(["--inventory", str(inventory.resolve()), "--inventory-sha256", inventory_sha256])
+                    command.extend(["--inventory", str(inventory.resolve()), "--inventory-sha256", inventory_sha256, "--candidates", str(candidates.resolve()), "--candidates-sha256", candidates_sha256])
                 for key, value in config.items():
                     flag = "--" + key.replace("_", "-")
                     if isinstance(value, bool):
@@ -101,8 +101,10 @@ def main():
     parser.add_argument("config", type=Path); parser.add_argument("output", type=Path)
     parser.add_argument("--inventory", type=Path, required=True)
     parser.add_argument("--inventory-sha256", required=True)
+    parser.add_argument("--candidates", type=Path, required=True)
+    parser.add_argument("--candidates-sha256", required=True)
     args = parser.parse_args()
-    run(args.raw, args.manifest, args.config, args.output, args.inventory, args.inventory_sha256)
+    run(args.raw, args.manifest, args.config, args.output, args.inventory, args.inventory_sha256, args.candidates, args.candidates_sha256)
 
 
 if __name__ == "__main__":
